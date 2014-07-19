@@ -8,6 +8,7 @@ if(this.Graphite == null)
     // -- CONNECTION definition
     function()
     {
+        Graphite._RADIAL_OFFSET = 85;
         Graphite._UNIQUE_LINE_ID = 0;
         Graphite.Connection = function(properties)
         {
@@ -20,52 +21,23 @@ if(this.Graphite == null)
             this._type = properties.type;
             this._startGroup = properties.start;
             
-            if(properties.end != null)
-            {
-                this._endGroup = properties.end;
-                properties.points = [properties.start.getX(), properties.start.getY(), properties.end.getX(), properties.end.getY()];
-            }
-            else
-            {
-                // no end means it starts and stops in same pixel
-                this._endGroup = properties.start;
-                properties.points = [properties.start.getX(), properties.start.getY(), properties.start.getX(), properties.start.getY()];
-            }
+            // for now, it starts and stops in same pixel- until an end is explicitly set
+            this._endGroup = properties.start;
+            properties.points = [properties.start.getX(), properties.start.getY(), properties.start.getX(), properties.start.getY()];
             
             this._getStrokeWidthForType = function(isHighlighted)
             {
                 if(this._type == Graphite.Connection.DOTTED)
                 {
-                    if(isHighlighted)
-                    {
-                    	return 6;
-                    }
-                    else
-                    {
-                    	return 5;
-                    }
+                    return isHighlighted ? 6 : 5;
                 }
                 if(this._type == Graphite.Connection.DASHED)
                 {
-                    if(isHighlighted)
-                    {
-                    	return 6;
-                    }
-                    else
-                    {
-                    	return 4;
-                    }
+                    return isHighlighted ? 6 : 4;
                 }
                 else
                 {
-                    if(isHighlighted)
-                    {
-                    	return 6;
-                    }
-                    else
-                    {
-                    	return 3;
-                    }
+                    return isHighlighted ? 6 : 3;
                 }
             };
             
@@ -92,7 +64,6 @@ if(this.Graphite == null)
             // as we mouseenter, change line color and size
             this.on('mouseenter', function(event)
             {
-                console.log("mouse ent!")
                 this.setStrokeWidth(this._getStrokeWidthForType(true));
                 this.setOpacity(0.2);
                 this.setShadowEnabled(true);
@@ -116,7 +87,7 @@ if(this.Graphite == null)
             {
                 if(this._isHighlighted == null)
                 {
-                	this._isHighlighted = false;
+                    this._isHighlighted = false;
                 }
                 
                 return this._isHighlighted;
@@ -124,12 +95,37 @@ if(this.Graphite == null)
             
             this.setEndGroup = function(end)
             {
+                // update end group
                 this._endGroup = end;
+                
+                // this will make the radial offsets draw properly and automatically
+                this.dragUpdate();
+                
+                // draw the update
+                // done internal to this call because the expectation is that end
+                // points are not set in bunches, but one at a time, so no draw
+                // optimizations are likely to occur by moving this out
+                this.getLayer().draw();
             };
             
             this.getEndGroups = function()
             {
                 return {start:this._startGroup, end:this._endGroup};
+            };
+            
+            this.dragUpdate = function()
+            {
+                var startPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.getX(), this._startGroup.getY(), 
+                                                               this._endGroup.getX(), this._endGroup.getY(), 
+                                                               Graphite._RADIAL_OFFSET, true);
+                var endPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.getX(), this._startGroup.getY(), 
+                                                             this._endGroup.getX(), this._endGroup.getY(), 
+                                                             Graphite._RADIAL_OFFSET, false);
+                
+                this.setPoints([startPt.x, startPt.y, endPt.x, endPt.y]);
+                
+                // note: there is intentionally no drawing here because we likely
+                // have a batch of lines being dragged with one node, so draw them all at once
             };
             
             this.destroy = function()
@@ -141,6 +137,7 @@ if(this.Graphite == null)
             
             Graphite._UNIQUE_LINE_ID++;
         };
+        
         Kinetic.Util.extend(Graphite.Connection, Kinetic.Line);
         Graphite.Connection.SOLID = 0;
         Graphite.Connection.DASHED = 1;

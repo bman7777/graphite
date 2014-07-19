@@ -71,18 +71,7 @@ if(this.Graphite == null)
                         var endGroup = this._connectionList[i].otherEnd;
                         if(this.getId() != endGroup.getId())
                         {
-                            if(event.type == 'touchmove')
-                            {
-                                var pos = this.getStage().getTouchPosition();
-                                this._connectionList[i].line.setPoints([pos.x, pos.y, endGroup.getX(), endGroup.getY()]);
-                                this.setX(pos.x);
-                                this.setY(pos.y);
-                                this.draw();
-                            }
-                            else
-                            {
-                                this._connectionList[i].line.setPoints([this.getX(), this.getY(), endGroup.getX(), endGroup.getY()]);
-                            }
+                            this._connectionList[i].line.dragUpdate();
                             
                             drawLayer = this._connectionList[i].line.getLayer();
                         }
