@@ -54,19 +54,7 @@ if(this.Graphite == null)
                 this.getLayer().draw();
             });
             
-            this.on('touchstart', function(event)
-            {
-                this.getStage().addEventListener('touchmove', this._updateNodeDrag);
-                
-                var endTouchDrag = function()
-                {
-                    this.getStage().removeEventListener('touchmove', endTouchDrag);
-                };
-                
-                this.getStage().addEventListener('touchend', endTouchDrag);
-            });
-            
-            // as we drag move something make sure the node follows the mouse
+            // as we drag move something make sure the connections follow the node
             this.on('dragmove', function(event)
             {
                 this._updateNodeDrag(event);
@@ -74,10 +62,10 @@ if(this.Graphite == null)
             
             this._updateNodeDrag = function(event)
             {
-                event.preventDefault();
+            	event.preventDefault();
                 if(this._connectionList != null)
                 {
-                    var drawLayer;
+                    var drawLayer = null;
                     for(var i = 0; i < this._connectionList.length; i++)
                     {
                         var endGroup = this._connectionList[i].otherEnd;
@@ -162,7 +150,7 @@ if(this.Graphite == null)
             
             this.destroy = function()
             {
-                this.off("dragmove touchstart dblclick mouseenter mouseleave");
+                this.off("dragmove dblclick mouseenter mouseleave");
                 
                 Kinetic.Group.prototype.destroy.call(this);
             };

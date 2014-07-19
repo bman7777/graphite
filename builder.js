@@ -18,13 +18,23 @@ if(this.Graphite == null)
             // click+hold means that the drag event doesn't fire
             stage.getContent().addEventListener('mousedown', function(event) 
             {
+                // right clicking the canvas will clear the drawing state 
+                if(event.which != 1)
+                {
+                    this.clearUnfinishedBuilding();
+                    
+                    // we are in selecting mode now
+                    this.enterSelectionState();
+                }
+                
             	event.preventDefault();
-            });
+            }.bind(this));
             stage.getContent().addEventListener('touchstart', function(event) 
             {
             	event.preventDefault();
             });
             // $HACK end$
+            
             
             // connections should be under shapes, so add those first
             this._connectionLayer = new Kinetic.Layer();
@@ -238,17 +248,36 @@ if(this.Graphite == null)
                 // when click occurs, we are finalized
                 var stopMovingNode = function(event)
                 {
-                    // stop listening for mouse moves
-                    this._removeAllCanvasListeners();
-                    
-                    // now that this node is final, make it opaque
-                    this._pendingNode.setOpacity(1);
-                    
-                    // now we are finalized and no need to be 'pending', so kill reference
-                    this._pendingNode = null;
-                    
-                    // automatically start adding a new node now
-                    this.addNode(type);
+                	switch(event.which)
+                	{
+	                	case 1:
+	                	{
+		                    // stop listening for mouse moves
+		                    this._removeAllCanvasListeners();
+		                    
+		                    // now that this node is final, make it opaque
+		                    this._pendingNode.setOpacity(1);
+		                    
+		                    // now we are finalized and no need to be 'pending', so kill reference
+		                    this._pendingNode = null;
+		                    
+		                    // automatically start adding a new node now
+		                    this.addNode(type);
+		                    
+		                    break;
+	                	}
+	                	default:
+	                	{
+	                		// clear state for our in-progress node
+	                        this.clearUnfinishedBuilding();
+	                        
+	                        // we are in selecting mode now
+	                        this.enterSelectionState();
+	                		
+	                		event.preventDefault();
+	                		break;
+	                	}
+                	}
 
                 }.bind(this);
                 
@@ -296,7 +325,10 @@ if(this.Graphite == null)
                 // transfer scope from clicked end node to 'this'
                 var nodeClickEnd = function(event)
                 {
-                    endDrawLine(this);
+                	if(event.which == 1)
+                	{
+                		endDrawLine(this);
+                	}
                 };
                 
                 // click on a node when line is pending
