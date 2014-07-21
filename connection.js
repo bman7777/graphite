@@ -8,8 +8,9 @@ if(this.Graphite == null)
     // -- CONNECTION definition
     function()
     {
-        Graphite._RADIAL_OFFSET = 85;
+        Graphite._RADIAL_OFFSET = 90;
         Graphite._UNIQUE_LINE_ID = 0;
+        Graphite._ARROW_SIZE = 30;
         Graphite.Connection = function(properties)
         {
             if(properties == null)
@@ -17,13 +18,12 @@ if(this.Graphite == null)
                 properties = {};
             }
             
-            properties.id='line'+Graphite._UNIQUE_LINE_ID;
             this._type = properties.type;
             this._startGroup = properties.start;
             
             // for now, it starts and stops in same pixel- until an end is explicitly set
             this._endGroup = properties.start;
-            properties.points = [properties.start.getX(), properties.start.getY(), properties.start.getX(), properties.start.getY()];
+            properties.points = [properties.start.x(), properties.start.y(), properties.start.x(), properties.start.y()];
             
             this._getStrokeWidthForType = function(isHighlighted)
             {
@@ -46,27 +46,55 @@ if(this.Graphite == null)
             properties.lineJoin = 'round';
             properties.shadowEnabled = false;
             properties.shadowColor = '#333333';
-            properties.shadowOffset = 3;
-            properties.shadowOpacity = 0.7;
+            properties.shadowOffset = {x:2, y:2};
+            properties.shadowOpacity = 0.8;
             
             if(this._type == Graphite.Connection.DASHED)
             {
-                properties.dashArray =[25, 10];
+                properties.dash =[25, 10];
             }
             else if(this._type == Graphite.Connection.DOTTED)
             {
-                properties.dashArray =[1, 8];
+                properties.dash =[1, 8];
                 properties.lineCap = "round";
             }
             
-            Kinetic.Line.call(this, properties);
+            Kinetic.Group.call(this, { id: 'line'+Graphite._UNIQUE_LINE_ID });
+            
+            this._line = new Kinetic.Line(properties);
+            this.add(this._line);
+            
+            this._arrowDrawFunc = function(context)
+            {
+                context.beginPath();
+                context.moveTo(0, 0);
+                context.lineTo(Graphite._ARROW_SIZE, -1*Graphite._ARROW_SIZE*0.3);
+                context.lineTo(Graphite._ARROW_SIZE*0.8, 0);
+                context.lineTo(Graphite._ARROW_SIZE, Graphite._ARROW_SIZE*0.3);
+                context.lineTo(0, 0);
+                context.closePath();
+                context.fillStrokeShape(this);
+            };
+            
+            this._startArrow = new Kinetic.Shape(
+            {
+                fill: 'black',
+                drawFunc: this._arrowDrawFunc,
+                shadowEnabled: false,
+                shadowColor: '#333333',
+                shadowOffset: {x:2, y:2},
+                shadowOpacity: 0.8
+            });
+            this.add(this._startArrow);
             
             // as we mouseenter, change line color and size
             this.on('mouseenter', function(event)
             {
-                this.setStrokeWidth(this._getStrokeWidthForType(true));
-                this.setOpacity(0.2);
-                this.setShadowEnabled(true);
+                this._line.strokeWidth(this._getStrokeWidthForType(true));
+                this._line.shadowEnabled(true);
+                this._line.stroke('#EEEEEE');
+                this._startArrow.fill('#EEEEEE');
+                this._startArrow.shadowEnabled(true);
                 this.getLayer().draw();
                 
                 this._isHighlighted = true;
@@ -75,9 +103,11 @@ if(this.Graphite == null)
             // as we mouseleave, change line color and size
             this.on('mouseleave', function(event)
             {
-                this.setStrokeWidth(this._getStrokeWidthForType(false));
-                this.setOpacity(1);
-                this.setShadowEnabled(false);
+                this._line.strokeWidth(this._getStrokeWidthForType(false));
+                this._line.shadowEnabled(false);
+                this._line.stroke('black');
+                this._startArrow.fill('black');
+                this._startArrow.shadowEnabled(false);
                 this.getLayer().draw();
                 
                 this._isHighlighted = false;
@@ -113,16 +143,44 @@ if(this.Graphite == null)
                 return {start:this._startGroup, end:this._endGroup};
             };
             
-            this.dragUpdate = function()
+            this.dragUpdate = function(x, y)
             {
-                var startPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.getX(), this._startGroup.getY(), 
-                                                               this._endGroup.getX(), this._endGroup.getY(), 
-                                                               Graphite._RADIAL_OFFSET, true);
-                var endPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.getX(), this._startGroup.getY(), 
-                                                             this._endGroup.getX(), this._endGroup.getY(), 
-                                                             Graphite._RADIAL_OFFSET, false);
+                if(x == undefined)
+                {
+                    x = this._endGroup.x();
+                }
                 
-                this.setPoints([startPt.x, startPt.y, endPt.x, endPt.y]);
+                if(y == undefined)
+                {
+                    y = this._endGroup.y();
+                }
+                
+                // update line begin/end
+                var startPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.x(), this._startGroup.y(), 
+                                                               x, y, Graphite._RADIAL_OFFSET, true);
+                var endPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.x(), this._startGroup.y(), 
+                                                             x, y, Graphite._RADIAL_OFFSET, false);
+                
+                this._line.setPoints([startPt.x, startPt.y, endPt.x, endPt.y]);
+                
+                // update arrow positioning
+                var startArrowPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.x(), this._startGroup.y(), startPt.x, startPt.y, 
+                                                                    0.5 * Graphite._ARROW_SIZE, false);
+                this._startArrow.setX(startArrowPt.x);
+                this._startArrow.setY(startArrowPt.y);
+                
+                // update arrow rotation
+                var slope = (y - this._startGroup.y()) / (x - this._startGroup.x());
+                if(this._startGroup.x() < x)
+                {
+                    this._startArrow.setRotationDeg(Math.atan(slope) * (180 / Math.PI));
+                }
+                else
+                {
+                    this._startArrow.setRotationDeg((Math.atan(slope) * (180 / Math.PI)) + 180);
+                }
+                
+                this.draw();
                 
                 // note: there is intentionally no drawing here because we likely
                 // have a batch of lines being dragged with one node, so draw them all at once
@@ -132,13 +190,13 @@ if(this.Graphite == null)
             {
                 this.off("mouseenter mouseleave");
                 
-                Kinetic.Line.prototype.destroy.call(this);
+                Kinetic.Group.prototype.destroy.call(this);
             };
             
             Graphite._UNIQUE_LINE_ID++;
         };
         
-        Kinetic.Util.extend(Graphite.Connection, Kinetic.Line);
+        Kinetic.Util.extend(Graphite.Connection, Kinetic.Group);
         Graphite.Connection.SOLID = 0;
         Graphite.Connection.DASHED = 1;
         Graphite.Connection.DOTTED = 2;

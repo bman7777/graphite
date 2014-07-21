@@ -37,7 +37,6 @@ if(this.Graphite == null)
             this.show = function(node)
             {
                 var CORNER_OFFSET = 20;
-                var FUDGE_SHIFT = 2;
                 
                 if(!this._isShowing)
                 { 

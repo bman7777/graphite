@@ -60,19 +60,26 @@ if(this.Graphite == null)
                 this._updateNodeDrag(event);
             });
             
+            this.on('dragend', function(event)
+            {
+                // there is an optimization temp layer made when dragging
+                // that needs to be deleted when dragging is done or else
+                // all the connection layer events will be hosed.  This 
+                // ancestor draw appears to clean up the temp layer 
+                this.getLayer().getAncestors()[0].draw();
+            });
+            
             this._updateNodeDrag = function(event)
             {
-            	event.preventDefault();
                 if(this._connectionList != null)
                 {
                     var drawLayer = null;
                     for(var i = 0; i < this._connectionList.length; i++)
                     {
                         var endGroup = this._connectionList[i].otherEnd;
-                        if(this.getId() != endGroup.getId())
+                        if(this.id() != endGroup.id())
                         {
                             this._connectionList[i].line.dragUpdate();
-                            
                             drawLayer = this._connectionList[i].line.getLayer();
                         }
                     }
@@ -109,12 +116,12 @@ if(this.Graphite == null)
             {
                 if(this._connectionList == null)
                 {
-                	this._connectionList = new Array();
+                    this._connectionList = new Array();
                 }
                 
                 for(var i = 0; i < this._connectionList.length; i++)
                 {
-                    if(line.getId() == this._connectionList[i].line.getId())
+                    if(line.id() == this._connectionList[i].line.id())
                     {
                         this._connectionList.splice(i, 1);
                         i--;

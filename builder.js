@@ -13,9 +13,6 @@ if(this.Graphite == null)
             
             // all layers will be added to the stage
             var stage = new Kinetic.Stage(stageProps);
-            
-            // $HACK start$ this fixes a chrome issue where the drag with a
-            // click+hold means that the drag event doesn't fire
             stage.getContent().addEventListener('mousedown', function(event) 
             {
                 // right clicking the canvas will clear the drawing state 
@@ -26,11 +23,7 @@ if(this.Graphite == null)
                     // we are in selecting mode now
                     this.enterSelectionState();
                 }
-                
-            	event.preventDefault();
             }.bind(this));
-            // $HACK end$
-            
             
             // connections should be under shapes, so add those first
             this._connectionLayer = new Kinetic.Layer();
@@ -52,7 +45,7 @@ if(this.Graphite == null)
                     var child = listChildren[i];
                     if(child.isHighlighted())
                     {
-                    	return child;
+                        return child;
                     }
                 }
                 
@@ -119,7 +112,7 @@ if(this.Graphite == null)
             {
                 var shape = node.getShape();
                 var options = node.getOptions();
-                node.off('click');
+                node.off('mouseup');
                 node.destroy();
                 this._nodeFactory.destroyShape(shape);
                 this._nodeFactory.destroyOptions(options);
@@ -218,40 +211,40 @@ if(this.Graphite == null)
                 // when click occurs, we are finalized
                 var stopMovingNode = function(event)
                 {
-                	switch(event.which)
-                	{
-	                	case 1:
-	                	{
-		                    // stop listening for mouse moves
-		                    this._removeAllCanvasListeners();
-		                    
-		                    // now that this node is final, make it opaque
-		                    this._pendingNode.setOpacity(1);
-		                    
-		                    // now we are finalized and no need to be 'pending', so kill reference
-		                    this._pendingNode = null;
-		                    
-		                    // automatically start adding a new node now
-		                    this.addNode(type);
-		                    
-		                    break;
-	                	}
-	                	default:
-	                	{
-	                		// clear state for our in-progress node
-	                        this.clearUnfinishedBuilding();
-	                        
-	                        // we are in selecting mode now
-	                        this.enterSelectionState();
-	                		
-	                		event.preventDefault();
-	                		break;
-	                	}
-                	}
+                    switch(event.evt.which)
+                    {
+                        case 1:
+                        {
+                            // stop listening for mouse moves
+                            this._removeAllCanvasListeners();
+                            
+                            // now that this node is final, make it opaque
+                            this._pendingNode.setOpacity(1);
+                            
+                            // now we are finalized and no need to be 'pending', so kill reference
+                            this._pendingNode = null;
+                            
+                            // automatically start adding a new node now
+                            this.addNode(type);
+                            
+                            break;
+                        }
+                        default:
+                        {
+                            // clear state for our in-progress node
+                            this.clearUnfinishedBuilding();
+                            
+                            // we are in selecting mode now
+                            this.enterSelectionState();
+                            
+                            //event.evt.preventDefault();
+                            break;
+                        }
+                    }
 
                 }.bind(this);
                 
-                this._pendingNode.on('click', stopMovingNode);
+                this._pendingNode.on('mouseup', stopMovingNode);
             };
             
             // being the process of drawing a line when a node is clicked
@@ -269,19 +262,20 @@ if(this.Graphite == null)
                 // track line as we move
                 var updateLine = function(event) 
                 {
-                    var points = this._pendingConnection.getPoints();
-                    points[1] = {x: event.clientX, y: event.clientY};
+                    // the mouse tracking is done here
+                    this._pendingConnection.dragUpdate(event.clientX, event.clientY);
                     
+                    // draw the line shifts external to dragging
                     this._connectionLayer.draw();
                 }.bind(this);
                 
                 // transfer scope from clicked end node to 'this'
                 var nodeClickEnd = function(event)
                 {
-                	if(event.which == 1)
-                	{
-                		endDrawLine(this);
-                	}
+                    if(event.evt.which == 1)
+                    {
+                        endDrawLine(this);
+                    }
                 };
                 
                 // click on a node when line is pending
@@ -312,7 +306,7 @@ if(this.Graphite == null)
                         var node = listChildren[i];
                         
                         // stop listening for line ends
-                        node.off('click');
+                        node.off('mouseup');
                         
                         // turn on all dragging of objects
                         node.setDraggable(true);
@@ -344,10 +338,10 @@ if(this.Graphite == null)
                         var node = listChildren[i];
                         
                         // stop listening for line begins
-                        node.off('click');
+                        node.off('mouseup');
                         
                         // start listening for line ends
-                        node.on('click', nodeClickEnd);
+                        node.on('mouseup', nodeClickEnd);
                     }
 
                 }.bind(this);
@@ -362,7 +356,7 @@ if(this.Graphite == null)
                     node.setDraggable(false);
                     
                     // listen for click on all nodes to start the connection
-                    node.on('click', nodeClickBegin);
+                    node.on('mouseup', nodeClickBegin);
                 }
             };
             
@@ -418,7 +412,7 @@ if(this.Graphite == null)
                     var node = listChildren[i];
                     
                     node.setDraggable(true);
-                    node.off('click');
+                    node.off('mouseup');
                 }
                 
                 this._canvas.style.cursor = "auto";
