@@ -36,49 +36,21 @@ if(this.Graphite == null)
             
             this.show = function(node)
             {
-                var CORNER_OFFSET = 20;
-                
                 if(!this._isShowing)
                 { 
-                    var selectCorner = new Image();
-                    selectCorner.src = Graphite.NodeOptions.BG_SETTINGS_PATH;
-                    selectCorner.onload = function() 
+                    var halo = new Image();
+                    halo.src = properties.bgImageSrc;
+                    halo.onload = function() 
                     {
-                        var tlImage = new Kinetic.Image(
+                        var bgImage = new Kinetic.Image(
                         {
-                            image: selectCorner,
-                            x: (-1 * (properties.bg.width / 2)) - CORNER_OFFSET,
-                            y: (-1 * (properties.bg.height / 2)) - CORNER_OFFSET
+                            image: halo,
+                            x: (properties.bg.width / 2),
+                            y: (-1 * (properties.bg.height / 2)),
+                            rotation: properties.bg.rotation
                         });
                         
-                        var blImage = new Kinetic.Image(
-                        {
-                            image: selectCorner,
-                            rotationDeg: -90,
-                            x: (-1 * (properties.bg.width / 2)) - CORNER_OFFSET,
-                            y: ( 1 * (properties.bg.height / 2)) + CORNER_OFFSET
-                        });
-                        
-                        var trImage = new Kinetic.Image(
-                        {
-                            image: selectCorner,
-                            x: ( 1 * (properties.bg.width / 2)) + CORNER_OFFSET,
-                            y: (-1 * (properties.bg.height / 2)) - CORNER_OFFSET,
-                            rotationDeg: 90
-                        });
-                        
-                        var brImage = new Kinetic.Image(
-                        {
-                            image: selectCorner,
-                            rotationDeg: 180,
-                            x: ( 1 * (properties.bg.width / 2)) + CORNER_OFFSET,
-                            y: ( 1 * (properties.bg.height / 2)) + CORNER_OFFSET
-                        });
-                        
-                        this.add(tlImage);
-                        this.add(blImage);
-                        this.add(trImage);
-                        this.add(brImage);
+                        this.add(bgImage);
                         
                         this.getLayer().draw();
                     }.bind(this._background);
@@ -93,23 +65,44 @@ if(this.Graphite == null)
                             y: properties.deleteProps.y,
                             image: deleteIcon,
                             shadowEnabled: false,
-                            shadowColor: '#555555',
-                            shadowOffset: 2,
-                            shadowOpacity: 0.7,
+                            shadowColor: '#333333',
+                            shadowOffset: {x:2, y:2},
+                            shadowOpacity: 0.8,
                             width: deleteIcon.width,
                             height: deleteIcon.height
                         });
                         
                         this.add(deleteImage);
                         
+                        var deleteText = new Kinetic.Text(
+                        {
+                            x: properties.deleteProps.x - 3,
+                            y: properties.deleteProps.y + 37,
+                            text: 'Delete',
+                            fontSize: 9,
+                            fill: 'black',
+                            fontFamily:'Arial Black'
+                        });
+                        this.add(deleteText);
+                        
                         deleteImage.on('mouseenter', function(event)
                         {
-                            this.setShadowEnabled(true);
+                            this.shadowEnabled(true);
+                            this.opacity(0.3);
+                            
+                            deleteText.opacity(0.6);
+                            
+                            this.getLayer().draw();
                         });
                         
-                        deleteImage.on('mouseout', function(event)
+                        deleteImage.on('mouseleave', function(event)
                         {
-                            this.setShadowEnabled(false);
+                            this.shadowEnabled(false);
+                            this.opacity(1);
+                            
+                            deleteText.opacity(1);
+                            
+                            this.getLayer().draw();
                         });
                         
                         deleteImage.on('click', function(event)
@@ -130,23 +123,44 @@ if(this.Graphite == null)
                             y: properties.contentProps.y,
                             image: contentIcon,
                             shadowEnabled: false,
-                            shadowColor: '#555555',
-                            shadowOffset: 2,
-                            shadowOpacity: 0.7,
+                            shadowColor: '#333333',
+                            shadowOffset: {x:2, y:2},
+                            shadowOpacity: 0.8,
                             width: contentIcon.width,
                             height: contentIcon.height
                         });
                         
                         this.add(contentImage);
                         
+                        var contentText = new Kinetic.Text(
+                        {
+                            x: properties.contentProps.x - 8,
+                            y: properties.contentProps.y + 34,
+                            text: 'Content',
+                            fontSize: 9,
+                            fill: 'black',
+                            fontFamily:'Arial Black'
+                        });
+                        this.add(contentText);
+                        
                         contentImage.on('mouseenter', function(event)
                         {
-                            this.setShadowEnabled(true);
+                            this.shadowEnabled(true);
+                            this.opacity(0.3);
+                            
+                            contentText.opacity(0.6);
+                            
+                            this.getLayer().draw();
                         });
                         
-                        contentImage.on('mouseout', function(event)
+                        contentImage.on('mouseleave', function(event)
                         {
-                            this.setShadowEnabled(false);
+                            this.shadowEnabled(false);
+                            this.opacity(1);
+                            
+                            contentText.opacity(1);
+                            
+                            this.getLayer().draw();
                         });
                         
                         contentImage.on('click', function(event)
@@ -167,23 +181,43 @@ if(this.Graphite == null)
                             y: properties.settingsProps.y,
                             image: settingsIcon,
                             shadowEnabled: false,
-                            shadowColor: '#555555',
-                            shadowOffset: 2,
-                            shadowOpacity: 0.7,
+                            shadowColor: '#333333',
+                            shadowOffset: {x:2, y:2},
+                            shadowOpacity: 0.8,
                             width: settingsIcon.width,
                             height: settingsIcon.height
                         });
+                        this.add(settingsImage);
                         
-                        this._overlay.add(settingsImage);
+                        var settingsText = new Kinetic.Text(
+                        {
+                            x: properties.settingsProps.x - 3,
+                            y: properties.settingsProps.y + 37,
+                            text: 'Settings',
+                            fontSize: 9,
+                            fill: 'black',
+                            fontFamily:'Arial Black'
+                        });
+                        this.add(settingsText);
                         
                         settingsImage.on('mouseenter', function(event)
                         {
-                            this.setShadowEnabled(true);
+                            this.shadowEnabled(true);
+                            this.opacity(0.3);
+                            
+                            settingsText.opacity(0.6);
+                            
+                            this.getLayer().draw();
                         });
                         
-                        settingsImage.on('mouseout', function(event)
+                        settingsImage.on('mouseleave', function(event)
                         {
-                            this.setShadowEnabled(false);
+                            this.shadowEnabled(false);
+                            this.opacity(1);
+                            
+                            settingsText.opacity(1);
+                            
+                            this.getLayer().draw();
                         });
                         
                         settingsImage.on('click', function(event)
@@ -191,8 +225,8 @@ if(this.Graphite == null)
                             // todo
                         });
                         
-                        this._overlay.getLayer().draw();
-                    }.bind(this);
+                        this.getLayer().draw();
+                    }.bind(this._overlay);
                     this._isShowing = true;
                 }
             };
@@ -200,9 +234,18 @@ if(this.Graphite == null)
             this.hide = function(node)
             {
                 if(this._isShowing)
-                { 
+                {
+                    var childList = this._overlay.getChildren();
+                    for(var i = 0; i < childList.length; i++)
+                    {
+                        childList[i].off("mouseenter mouseleave click");
+                    }
+                    
+                    // to be more scalable, let's not keep these around
+                    // when not necessary
                     this._background.destroyChildren();
                     this._overlay.destroyChildren();
+                    
                     node.getLayer().draw();
                     this._isShowing = false;
                 }
@@ -210,12 +253,13 @@ if(this.Graphite == null)
             
             this.destroy = function()
             {
-                if(this._isShowing)
-                { 
-                    this._background.destroyChildren();
-                    this._overlay.destroyChildren();
+                // kill all events so we don't have a dangling event
+                var childList = this._overlay.getChildren();
+                for(var i = 0; i < childList.length; i++)
+                {
+                    childList[i].off("mouseenter mouseleave click");
                 }
-                
+
                 this._background.destroy();
                 this._background = null;
                 
@@ -224,10 +268,9 @@ if(this.Graphite == null)
             };
         };
         
-        Graphite.NodeOptions.ICON_DELETE_PATH = "img/web/deleteIcon.gif";
-        Graphite.NodeOptions.ICON_CONTENT_PATH = "img/web/contentIcon.png";
-        Graphite.NodeOptions.ICON_SETTINGS_PATH = "img/web/settingsIcon.png";
-        Graphite.NodeOptions.BG_SETTINGS_PATH = "img/web/selectionCorner.png";
+        Graphite.NodeOptions.ICON_DELETE_PATH = "img/web/delete_icon.gif";
+        Graphite.NodeOptions.ICON_CONTENT_PATH = "img/web/content_icon.gif";
+        Graphite.NodeOptions.ICON_SETTINGS_PATH = "img/web/settings_icon.gif";
     }
 )();
 

@@ -113,9 +113,14 @@ if(this.Graphite == null)
                 var shape = node.getShape();
                 var options = node.getOptions();
                 node.off('mouseup');
-                node.destroy();
+                
+                // since the overlay/bg are children of node, they
+                // should get killed first
                 this._nodeFactory.destroyShape(shape);
                 this._nodeFactory.destroyOptions(options);
+                
+                // destroy the node last
+                node.destroy();
             };
             
             this.removeNode = function(node)
