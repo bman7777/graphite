@@ -20,6 +20,32 @@ if(this.Graphite.MathUtil == null)
                 return Math.sqrt(xComp + yComp);
             };
             
+            Graphite.MathUtil.GetCenterPoint = function(startX, startY, endX, endY)
+            {
+                var midX;
+                var midY;
+                
+                if(endX > startX)
+                {
+                    midX = ((endX - startX) / 2) + startX;
+                }
+                else
+                {
+                    midX = ((startX - endX) / 2) + endX;
+                }
+                
+                if(endY > startY)
+                {
+                    midY = ((endY - startY) / 2) + startY;
+                }
+                else
+                {
+                    midY = ((startY - endY) / 2) + endY;
+                }
+                
+                return {x:midX, y:midY};
+            };
+            
             Graphite.MathUtil.getOffsetPoint = function(x1, y1, x2, y2, offset, from1) 
             {
                 var x;

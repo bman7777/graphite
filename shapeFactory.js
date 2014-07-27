@@ -144,8 +144,8 @@ if(this.Graphite == null)
                         optionProps.bgImageSrc = "img/web/roundHalo.png";
                         optionProps.contentProps.x = 90;
                         optionProps.contentProps.y = -60;
-                        optionProps.deleteProps.x = 43;
-                        optionProps.deleteProps.y = -110;
+                        optionProps.deleteProps.x = 46;
+                        optionProps.deleteProps.y = -114;
                         optionProps.settingsProps.x = 90;
                         optionProps.settingsProps.y = 5;
                         optionProps.bg = {width: -10, height:200, rotation:-25};

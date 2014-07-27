@@ -83,9 +83,26 @@ if(this.Graphite == null)
                 shadowEnabled: false,
                 shadowColor: '#333333',
                 shadowOffset: {x:2, y:2},
-                shadowOpacity: 0.8
+                shadowOpacity: 0.8,
+                opacity: 0
             });
             this.add(this._startArrow);
+            
+            this._endArrow = new Kinetic.Shape(
+            {
+                fill: 'black',
+                drawFunc: this._arrowDrawFunc,
+                shadowEnabled: false,
+                shadowColor: '#333333',
+                shadowOffset: {x:2, y:2},
+                shadowOpacity: 0.8,
+                opacity: 0
+            });
+            this.add(this._endArrow);
+            
+            this._optionDisplay = properties.options;
+            this.add(this._optionDisplay.getBackground());
+            this.add(this._optionDisplay.getOverlay());
             
             // as we mouseenter, change line color and size
             this.on('mouseenter', function(event)
@@ -95,6 +112,8 @@ if(this.Graphite == null)
                 this._line.stroke('#EEEEEE');
                 this._startArrow.fill('#EEEEEE');
                 this._startArrow.shadowEnabled(true);
+                this._endArrow.fill('#EEEEEE');
+                this._endArrow.shadowEnabled(true);
                 this.getLayer().draw();
                 
                 this._isHighlighted = true;
@@ -108,10 +127,62 @@ if(this.Graphite == null)
                 this._line.stroke('black');
                 this._startArrow.fill('black');
                 this._startArrow.shadowEnabled(false);
+                this._endArrow.fill('black');
+                this._endArrow.shadowEnabled(false);
                 this.getLayer().draw();
                 
                 this._isHighlighted = false;
             });
+            
+            // listen for opening/closing the options
+            this.on('dblclick', function(event)
+            {
+                if(properties.getState() == Graphite.Builder.STATE_SELECT)
+                {
+                    if(!this._optionDisplay.isShowing())
+                    {
+                        this._optionDisplay.show(this);
+                    }
+                    else
+                    {
+                        this._optionDisplay.hide(this);
+                    }
+                }
+            });
+            
+            this.toggleArrow = function(isLeft)
+            {
+                var newlyShowing = false;
+                var arrow;
+                var lineEnd = this._line.points();
+                
+                if(lineEnd[0] < lineEnd[2])
+                {
+                    arrow = isLeft ? this._startArrow : this._endArrow;
+                }
+                else
+                {
+                    arrow = isLeft ? this._endArrow : this._startArrow;
+                }
+                
+                arrow.opacity(arrow.opacity() > 0 ? 0 : 1);
+                newlyShowing = (arrow.opacity() > 0);
+                
+                if(newlyShowing)
+                {
+                    // simulating a drag will move arrows into place and draw them
+                    this.dragUpdate();
+                }
+                else
+                {
+                    this.getLayer().draw();
+                }
+            };
+            
+            this.getOptions = function()
+            {
+                return this._optionDisplay;
+            };
             
             this.isHighlighted = function()
             {
@@ -164,21 +235,42 @@ if(this.Graphite == null)
                 this._line.setPoints([startPt.x, startPt.y, endPt.x, endPt.y]);
                 
                 // update arrow positioning
-                var startArrowPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.x(), this._startGroup.y(), startPt.x, startPt.y, 
-                                                                    0.5 * Graphite._ARROW_SIZE, false);
-                this._startArrow.setX(startArrowPt.x);
-                this._startArrow.setY(startArrowPt.y);
+                if(this._startArrow.opacity() > 0)
+                {
+                    var startArrowPt = Graphite.MathUtil.getOffsetPoint(this._startGroup.x(), this._startGroup.y(), startPt.x, startPt.y, 
+                                                                        0.5 * Graphite._ARROW_SIZE, false);
+                    this._startArrow.setX(startArrowPt.x);
+                    this._startArrow.setY(startArrowPt.y);
+                }
+                
+                if(this._endArrow.opacity() > 0)
+                {
+                    var endArrowPt = Graphite.MathUtil.getOffsetPoint(this._endGroup.x(), this._endGroup.y(), endPt.x, endPt.y, 
+                                                                        0.5 * Graphite._ARROW_SIZE, false);
+                    this._endArrow.setX(endArrowPt.x);
+                    this._endArrow.setY(endArrowPt.y);
+                }
                 
                 // update arrow rotation
                 var slope = (y - this._startGroup.y()) / (x - this._startGroup.x());
-                if(this._startGroup.x() < x)
+                if(this._startGroup.x() <= x)
                 {
                     this._startArrow.setRotationDeg(Math.atan(slope) * (180 / Math.PI));
+                    this._endArrow.setRotationDeg(Math.atan(slope) * (180 / Math.PI) + 180);
                 }
                 else
                 {
                     this._startArrow.setRotationDeg((Math.atan(slope) * (180 / Math.PI)) + 180);
+                    this._endArrow.setRotationDeg((Math.atan(slope) * (180 / Math.PI)));
                 }
+                
+                var centerPoint = Graphite.MathUtil.GetCenterPoint(startPt.x, startPt.y, endPt.x, endPt.y);
+                
+                // update options display
+                this._optionDisplay.getBackground().x(centerPoint.x + 55);
+                this._optionDisplay.getBackground().y(centerPoint.y + 100);
+                this._optionDisplay.getOverlay().x(centerPoint.x + 55);
+                this._optionDisplay.getOverlay().y(centerPoint.y + 100);
                 
                 this.draw();
                 

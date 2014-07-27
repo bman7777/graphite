@@ -35,6 +35,9 @@ if(this.Graphite == null)
             
             // make a factory for nodes
             this._nodeFactory = new Graphite.ShapeFactory(this);
+            
+            // make a factory for lines
+            this._lineFactory = new Graphite.LineFactory(this);
 
             // loop through children of the given layer and check isHighlighted
             this._findHighlightedChild = function(layer)
@@ -70,22 +73,7 @@ if(this.Graphite == null)
                         var line = this._findHighlightedChild(this._connectionLayer);
                         if(line != null)
                         {
-                            // remove all connections that nodes have to this line
-                            var groups = line.getEndGroups();
-                            groups.start.removeConnection(line);
-                            groups.end.removeConnection(line);
-                            
-                            // kill the line
-                            line.destroy();
-                            
-                            // if we deleted when building, we should clear state
-                            this.clearUnfinishedBuilding();
-                            
-                            // we are in selecting mode now
-                            this.enterSelectionState();
-                            
-                            // redraw the deleted change(s)
-                            this._connectionLayer.draw();
+                            this.removeConnection(line);
                         }
                     }
                 }
@@ -332,7 +320,14 @@ if(this.Graphite == null)
                 {
                     // build a connection and cache it for access later
                     this._pendingConnectionStart = startNode;
-                    this._pendingConnection = new Graphite.Connection({start:this._pendingConnectionStart, type:type});
+                    var options = this._lineFactory.createOptions();
+                    this._pendingConnection = new Graphite.Connection(
+                    {
+                        getState:this.getState.bind(this),
+                        start:this._pendingConnectionStart, 
+                        type:type,
+                        options: options
+                    });
                     this._connectionLayer.add(this._pendingConnection);
                     
                     this._addCanvasListener('mousemove', updateLine);
@@ -421,6 +416,28 @@ if(this.Graphite == null)
                 }
                 
                 this._canvas.style.cursor = "auto";
+            };
+            
+            this.removeConnection = function(line)
+            {
+                // remove all connections that nodes have to this line
+                var groups = line.getEndGroups();
+                groups.start.removeConnection(line);
+                groups.end.removeConnection(line);
+                
+                this._lineFactory.destroyOptions(line.getOptions());
+                
+                // kill the line
+                line.destroy();
+                
+                // if we deleted when building, we should clear state
+                this.clearUnfinishedBuilding();
+                
+                // we are in selecting mode now
+                this.enterSelectionState();
+                
+                // redraw the deleted change(s)
+                this._connectionLayer.draw();  
             };
         };
         

@@ -5,31 +5,31 @@ if(this.Graphite == null)
 }
 	
 (
-	// -- NODE-OPTIONS definition
+	// -- CONNECTION-OPTIONS definition
 	function()
 	{
-		Graphite.NodeOptions = function(properties)
+		Graphite.ConnectionOptions = function(properties)
 		{
             if(properties == null)
             {
-                properties = { deleteOption: {}, contentOption: {}, settingsOption: {}, bg: {} };
+                properties = { deleteOption: {}, leftHeadOption: {}, rightHeadOption: {}, bg: {} };
             }
             
             this._isShowing = false;
             this._background = new Kinetic.Group();
             this._background.on('dblclick', function(event)
             {
-                // only hide the options when clicking on the node and not on the options themselves
+                // only hide the options when clicking on the connection and not on the options themselves
                 event.cancelBubble = true;
             });
             
             this._overlay = new Kinetic.Group();
             this._overlay.on('dblclick', function(event)
             {
-                // only hide the options when clicking on the node and not on the options themselves
+                // only hide the options when clicking on the connection and not on the options themselves
                 event.cancelBubble = true;
             });
-    
+            
             this.getBackground = function()
             {
                 return this._background;
@@ -45,7 +45,7 @@ if(this.Graphite == null)
                 return this._isShowing;
             };
             
-            this.show = function(node)
+            this.show = function(line)
             {
                 if(!this._isShowing)
                 { 
@@ -67,7 +67,7 @@ if(this.Graphite == null)
                     }.bind(this._background);
                     
                     var deleteIcon = new Image();
-                    deleteIcon.src = Graphite.NodeOptions.ICON_DELETE_PATH;
+                    deleteIcon.src = Graphite.ConnectionOptions.ICON_DELETE_PATH;
                     deleteIcon.onload = function() 
                     {
                         var deleteImage = new Kinetic.Image(
@@ -118,122 +118,122 @@ if(this.Graphite == null)
                         
                         deleteImage.on('click', function(event)
                         {
-                            properties.deleteProps.action(node);
+                            properties.deleteProps.action(line);
                         });
                         
                         this.getLayer().draw();
                     }.bind(this._overlay);
                     
-                    var contentIcon = new Image();
-                    contentIcon.src = Graphite.NodeOptions.ICON_CONTENT_PATH;
-                    contentIcon.onload = function() 
+                    var leftHeadIcon = new Image();
+                    leftHeadIcon.src = Graphite.ConnectionOptions.ICON_ARROW_PATH;
+                    leftHeadIcon.onload = function() 
                     {
-                        var contentImage = new Kinetic.Image(
+                        var leftHeadImage = new Kinetic.Image(
                         {
-                            x: properties.contentProps.x,
-                            y: properties.contentProps.y,
-                            image: contentIcon,
+                            x: properties.leftHeadProps.x,
+                            y: properties.leftHeadProps.y,
+                            image: leftHeadIcon,
                             shadowEnabled: false,
                             shadowColor: '#333333',
                             shadowOffset: {x:2, y:2},
                             shadowOpacity: 0.8,
-                            width: contentIcon.width,
-                            height: contentIcon.height
+                            width: leftHeadIcon.width,
+                            height: leftHeadIcon.height
                         });
+                        this.add(leftHeadImage);
                         
-                        this.add(contentImage);
-                        
-                        var contentText = new Kinetic.Text(
+                        var leftHeadText = new Kinetic.Text(
                         {
-                            x: properties.contentProps.x - 8,
-                            y: properties.contentProps.y + 34,
-                            text: 'Content',
+                            x: properties.leftHeadProps.x - 8,
+                            y: properties.leftHeadProps.y + 34,
+                            text: 'Arrowhead',
                             fontSize: 9,
                             fill: 'black',
                             fontFamily:'Arial Black'
                         });
-                        this.add(contentText);
+                        this.add(leftHeadText);
                         
-                        contentImage.on('mouseenter', function(event)
+                        leftHeadImage.on('mouseenter', function(event)
                         {
                             this.shadowEnabled(true);
                             this.opacity(0.3);
                             
-                            contentText.opacity(0.6);
+                            leftHeadText.opacity(0.6);
                             
                             this.getLayer().draw();
                         });
                         
-                        contentImage.on('mouseleave', function(event)
+                        leftHeadImage.on('mouseleave', function(event)
                         {
                             this.shadowEnabled(false);
                             this.opacity(1);
                             
-                            contentText.opacity(1);
+                            leftHeadText.opacity(1);
                             
                             this.getLayer().draw();
                         });
                         
-                        contentImage.on('click', function(event)
+                        leftHeadImage.on('click', function(event)
                         {
-                            // todo
+                            properties.leftHeadProps.action(line);
                         });
                         
                         this.getLayer().draw();
                     }.bind(this._overlay);
                     
-                    var settingsIcon = new Image();
-                    settingsIcon.src = Graphite.NodeOptions.ICON_SETTINGS_PATH;
-                    settingsIcon.onload = function() 
+                    var rightHeadIcon = new Image();
+                    rightHeadIcon.src = Graphite.ConnectionOptions.ICON_ARROW_PATH;
+                    rightHeadIcon.onload = function() 
                     {
-                        var settingsImage = new Kinetic.Image(
+                        var rightHeadImage = new Kinetic.Image(
                         {
-                            x: properties.settingsProps.x,
-                            y: properties.settingsProps.y,
-                            image: settingsIcon,
+                            x: properties.rightHeadProps.x,
+                            y: properties.rightHeadProps.y,
+                            image: rightHeadIcon,
                             shadowEnabled: false,
                             shadowColor: '#333333',
                             shadowOffset: {x:2, y:2},
                             shadowOpacity: 0.8,
-                            width: settingsIcon.width,
-                            height: settingsIcon.height
+                            width: rightHeadIcon.width,
+                            height: rightHeadIcon.height,
+                            rotation: 180
                         });
-                        this.add(settingsImage);
+                        this.add(rightHeadImage);
                         
-                        var settingsText = new Kinetic.Text(
+                        var rightHeadText = new Kinetic.Text(
                         {
-                            x: properties.settingsProps.x - 3,
-                            y: properties.settingsProps.y + 37,
-                            text: 'Settings',
+                            x: properties.rightHeadProps.x - 48,
+                            y: properties.rightHeadProps.y + 7,
+                            text: 'Arrowhead',
                             fontSize: 9,
                             fill: 'black',
                             fontFamily:'Arial Black'
                         });
-                        this.add(settingsText);
+                        this.add(rightHeadText);
                         
-                        settingsImage.on('mouseenter', function(event)
+                        rightHeadImage.on('mouseenter', function(event)
                         {
                             this.shadowEnabled(true);
                             this.opacity(0.3);
                             
-                            settingsText.opacity(0.6);
+                            rightHeadText.opacity(0.6);
                             
                             this.getLayer().draw();
                         });
                         
-                        settingsImage.on('mouseleave', function(event)
+                        rightHeadImage.on('mouseleave', function(event)
                         {
                             this.shadowEnabled(false);
                             this.opacity(1);
                             
-                            settingsText.opacity(1);
+                            rightHeadText.opacity(1);
                             
                             this.getLayer().draw();
                         });
                         
-                        settingsImage.on('click', function(event)
+                        rightHeadImage.on('click', function(event)
                         {
-                            // todo
+                            properties.rightHeadProps.action(line);
                         });
                         
                         this.getLayer().draw();
@@ -242,7 +242,7 @@ if(this.Graphite == null)
                 }
             };
             
-            this.hide = function(node)
+            this.hide = function(line)
             {
                 if(this._isShowing)
                 {
@@ -257,7 +257,7 @@ if(this.Graphite == null)
                     this._background.destroyChildren();
                     this._overlay.destroyChildren();
                     
-                    node.getLayer().draw();
+                    line.getLayer().draw();
                     this._isShowing = false;
                 }
             };
@@ -279,9 +279,8 @@ if(this.Graphite == null)
             };
         };
         
-        Graphite.NodeOptions.ICON_DELETE_PATH = "img/web/delete_icon.gif";
-        Graphite.NodeOptions.ICON_CONTENT_PATH = "img/web/content_icon.gif";
-        Graphite.NodeOptions.ICON_SETTINGS_PATH = "img/web/settings_icon.gif";
+        Graphite.ConnectionOptions.ICON_DELETE_PATH = "img/web/delete_icon.gif";
+        Graphite.ConnectionOptions.ICON_ARROW_PATH = "img/web/arrow_icon.gif";
     }
 )();
 
