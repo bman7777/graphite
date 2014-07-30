@@ -17,13 +17,13 @@ if(this.Graphite == null)
                 optionProps.leftHeadProps.action =  function(line) { line.toggleArrow(true); };
                 optionProps.rightHeadProps.action =  function(line) { line.toggleArrow(false); };
                 optionProps.bgImageSrc = "img/web/lineHalo.png";
-                optionProps.leftHeadProps.x = -134;
-                optionProps.leftHeadProps.y = -90;
-                optionProps.deleteProps.x = -67;
-                optionProps.deleteProps.y = -92;
-                optionProps.rightHeadProps.x = 27;
-                optionProps.rightHeadProps.y = -62;
-                optionProps.bg = {width: 42, height:158, rotation: 90};
+                optionProps.leftHeadProps.x = -60;
+                optionProps.leftHeadProps.y = 10;
+                optionProps.deleteProps.x = 5;
+                optionProps.deleteProps.y = 5;
+                optionProps.rightHeadProps.x = 38;
+                optionProps.rightHeadProps.y = 10;
+                optionProps.bg = {width: 40, height:158, rotation: 90};
 
                 return new Graphite.ConnectionOptions(optionProps);
             };

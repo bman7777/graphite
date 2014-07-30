@@ -124,30 +124,30 @@ if(this.Graphite == null)
                         optionProps.contentProps.y = -39;
                         optionProps.deleteProps.x = 27;
                         optionProps.deleteProps.y = -88;
-                        optionProps.settingsProps.x = 83;
-                        optionProps.settingsProps.y = 10;
+                        optionProps.settingsProps.x = 80;
+                        optionProps.settingsProps.y = 4;
                         optionProps.bg = {width: 12, height:150, rotation: -33};
                         break;
                         
                     case Graphite.ShapeFactory.SQUARE:
                         optionProps.bgImageSrc = "img/web/lineHalo.png";
-                        optionProps.contentProps.x = 67;
-                        optionProps.contentProps.y = -15;
-                        optionProps.deleteProps.x = 65;
-                        optionProps.deleteProps.y = -75;
-                        optionProps.settingsProps.x = 60;
-                        optionProps.settingsProps.y = 40;
+                        optionProps.contentProps.x = 72;
+                        optionProps.contentProps.y = -10;
+                        optionProps.deleteProps.x = 71;
+                        optionProps.deleteProps.y = -62;
+                        optionProps.settingsProps.x = 67;
+                        optionProps.settingsProps.y = 36;
                         optionProps.bg = {width: 125, height:150, rotation: 0};
                         break;
                     
                     default:
                         optionProps.bgImageSrc = "img/web/roundHalo.png";
-                        optionProps.contentProps.x = 90;
-                        optionProps.contentProps.y = -60;
-                        optionProps.deleteProps.x = 46;
-                        optionProps.deleteProps.y = -114;
-                        optionProps.settingsProps.x = 90;
-                        optionProps.settingsProps.y = 5;
+                        optionProps.contentProps.x = 94;
+                        optionProps.contentProps.y = -38;
+                        optionProps.deleteProps.x = 52;
+                        optionProps.deleteProps.y = -104;
+                        optionProps.settingsProps.x = 82;
+                        optionProps.settingsProps.y = 27;
                         optionProps.bg = {width: -10, height:200, rotation:-25};
                         break;
                 }

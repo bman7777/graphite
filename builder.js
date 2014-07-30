@@ -144,6 +144,8 @@ if(this.Graphite == null)
                 var pos = { x:event.clientX, y:event.clientY };
                 this._pendingNode.setX(pos.x);
                 this._pendingNode.setY(pos.y);
+                
+                // must be a layer draw so we don't see a trail as we drag
                 this._nodeLayer.draw();
             };
             
@@ -183,8 +185,13 @@ if(this.Graphite == null)
                 // make mouse look different
                 this._canvas.style.cursor = "pointer";
                 
-                var pos = { x:window.event.clientX, y:window.event.clientY };
-
+                var pos = { x: 0, y: 0};
+                if(window.event != undefined)
+                {
+                    pos.x = window.event.clientX;
+                    pos.y = window.event.clientY;
+                }
+                
                 // keep track of this node until we finalize (place it)
                 var shape = this._nodeFactory.createShape(type);
                 var options = this._nodeFactory.createOptions(type);

@@ -156,7 +156,7 @@ if(this.Graphite == null)
                 var arrow;
                 var lineEnd = this._line.points();
                 
-                if(lineEnd[0] < lineEnd[2])
+                if(lineEnd[0] <= lineEnd[2])
                 {
                     arrow = isLeft ? this._startArrow : this._endArrow;
                 }
@@ -253,24 +253,28 @@ if(this.Graphite == null)
                 
                 // update arrow rotation
                 var slope = (y - this._startGroup.y()) / (x - this._startGroup.x());
+                var rot = Math.atan(slope) * (180 / Math.PI);
                 if(this._startGroup.x() <= x)
                 {
-                    this._startArrow.setRotationDeg(Math.atan(slope) * (180 / Math.PI));
-                    this._endArrow.setRotationDeg(Math.atan(slope) * (180 / Math.PI) + 180);
+                    this._startArrow.setRotationDeg(rot);
+                    this._endArrow.setRotationDeg(rot + 180);
                 }
                 else
                 {
-                    this._startArrow.setRotationDeg((Math.atan(slope) * (180 / Math.PI)) + 180);
-                    this._endArrow.setRotationDeg((Math.atan(slope) * (180 / Math.PI)));
+                    this._startArrow.setRotationDeg(rot + 180);
+                    this._endArrow.setRotationDeg(rot);
                 }
+                
+                this._optionDisplay.getBackground().setRotationDeg(rot);
+                this._optionDisplay.getOverlay().setRotationDeg(rot);
                 
                 var centerPoint = Graphite.MathUtil.GetCenterPoint(startPt.x, startPt.y, endPt.x, endPt.y);
                 
                 // update options display
-                this._optionDisplay.getBackground().x(centerPoint.x + 55);
-                this._optionDisplay.getBackground().y(centerPoint.y + 100);
-                this._optionDisplay.getOverlay().x(centerPoint.x + 55);
-                this._optionDisplay.getOverlay().y(centerPoint.y + 100);
+                this._optionDisplay.getBackground().x(centerPoint.x); // + 55);
+                this._optionDisplay.getBackground().y(centerPoint.y); // + 90);
+                this._optionDisplay.getOverlay().x(centerPoint.x); // + 55);
+                this._optionDisplay.getOverlay().y(centerPoint.y); // + 90);
                 
                 this.draw();
                 

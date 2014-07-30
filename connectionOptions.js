@@ -56,8 +56,8 @@ if(this.Graphite == null)
                         var bgImage = new Kinetic.Image(
                         {
                             image: halo,
-                            x: (properties.bg.width / 2),
-                            y: (-1 * (properties.bg.height / 2)),
+                            x: properties.bg.height / 2,
+                            y: 10,
                             rotation: properties.bg.rotation
                         });
                         
@@ -72,46 +72,39 @@ if(this.Graphite == null)
                     {
                         var deleteImage = new Kinetic.Image(
                         {
-                            x: properties.deleteProps.x,
+                            x: properties.deleteProps.x - ((Graphite.ConnectionOptions.ICON_SCALE * 27) / 2),
                             y: properties.deleteProps.y,
                             image: deleteIcon,
-                            shadowEnabled: false,
-                            shadowColor: '#333333',
-                            shadowOffset: {x:2, y:2},
-                            shadowOpacity: 0.8,
-                            width: deleteIcon.width,
-                            height: deleteIcon.height
+                            scale: {x: Graphite.ConnectionOptions.ICON_SCALE, y: Graphite.ConnectionOptions.ICON_SCALE},
+                            opacity: Graphite.ConnectionOptions.UNFOCUS_OPACITY
                         });
                         
                         this.add(deleteImage);
                         
                         var deleteText = new Kinetic.Text(
                         {
-                            x: properties.deleteProps.x - 3,
-                            y: properties.deleteProps.y + 37,
+                            x: properties.deleteProps.x - 17,
+                            y: properties.deleteProps.y + 29,
                             text: 'Delete',
                             fontSize: 9,
                             fill: 'black',
-                            fontFamily:'Arial Black'
+                            fontFamily:'Arial Black',
+                            opacity: Graphite.ConnectionOptions.UNFOCUS_OPACITY
                         });
                         this.add(deleteText);
                         
                         deleteImage.on('mouseenter', function(event)
                         {
-                            this.shadowEnabled(true);
-                            this.opacity(0.3);
-                            
-                            deleteText.opacity(0.6);
+                            this.opacity(1);
+                            deleteText.opacity(1);
                             
                             this.getLayer().draw();
                         });
                         
                         deleteImage.on('mouseleave', function(event)
                         {
-                            this.shadowEnabled(false);
-                            this.opacity(1);
-                            
-                            deleteText.opacity(1);
+                            this.opacity(Graphite.ConnectionOptions.UNFOCUS_OPACITY);
+                            deleteText.opacity(Graphite.ConnectionOptions.UNFOCUS_OPACITY);
                             
                             this.getLayer().draw();
                         });
@@ -124,51 +117,44 @@ if(this.Graphite == null)
                         this.getLayer().draw();
                     }.bind(this._overlay);
                     
-                    var leftHeadIcon = new Image();
-                    leftHeadIcon.src = Graphite.ConnectionOptions.ICON_ARROW_PATH;
-                    leftHeadIcon.onload = function() 
+                    var arrowIcon = new Image();
+                    arrowIcon.src = Graphite.ConnectionOptions.ICON_ARROW_PATH;
+                    arrowIcon.onload = function() 
                     {
                         var leftHeadImage = new Kinetic.Image(
                         {
                             x: properties.leftHeadProps.x,
                             y: properties.leftHeadProps.y,
-                            image: leftHeadIcon,
-                            shadowEnabled: false,
-                            shadowColor: '#333333',
-                            shadowOffset: {x:2, y:2},
-                            shadowOpacity: 0.8,
-                            width: leftHeadIcon.width,
-                            height: leftHeadIcon.height
+                            image: arrowIcon,
+                            scale: {x: 0.65, y: 0.65},
+                            opacity: Graphite.ConnectionOptions.UNFOCUS_OPACITY
                         });
                         this.add(leftHeadImage);
                         
                         var leftHeadText = new Kinetic.Text(
                         {
-                            x: properties.leftHeadProps.x - 8,
-                            y: properties.leftHeadProps.y + 34,
-                            text: 'Arrowhead',
+                            x: properties.leftHeadProps.x,
+                            y: properties.leftHeadProps.y + 18,
+                            text: 'Arrow',
                             fontSize: 9,
                             fill: 'black',
-                            fontFamily:'Arial Black'
+                            fontFamily:'Arial Black',
+                            opacity: Graphite.ConnectionOptions.UNFOCUS_OPACITY
                         });
                         this.add(leftHeadText);
                         
                         leftHeadImage.on('mouseenter', function(event)
                         {
-                            this.shadowEnabled(true);
-                            this.opacity(0.3);
-                            
-                            leftHeadText.opacity(0.6);
+                            this.opacity(1);
+                            leftHeadText.opacity(1);
                             
                             this.getLayer().draw();
                         });
                         
                         leftHeadImage.on('mouseleave', function(event)
                         {
-                            this.shadowEnabled(false);
-                            this.opacity(1);
-                            
-                            leftHeadText.opacity(1);
+                            this.opacity(Graphite.ConnectionOptions.UNFOCUS_OPACITY);
+                            leftHeadText.opacity(Graphite.ConnectionOptions.UNFOCUS_OPACITY);
                             
                             this.getLayer().draw();
                         });
@@ -178,55 +164,40 @@ if(this.Graphite == null)
                             properties.leftHeadProps.action(line);
                         });
                         
-                        this.getLayer().draw();
-                    }.bind(this._overlay);
-                    
-                    var rightHeadIcon = new Image();
-                    rightHeadIcon.src = Graphite.ConnectionOptions.ICON_ARROW_PATH;
-                    rightHeadIcon.onload = function() 
-                    {
                         var rightHeadImage = new Kinetic.Image(
                         {
-                            x: properties.rightHeadProps.x,
-                            y: properties.rightHeadProps.y,
-                            image: rightHeadIcon,
-                            shadowEnabled: false,
-                            shadowColor: '#333333',
-                            shadowOffset: {x:2, y:2},
-                            shadowOpacity: 0.8,
-                            width: rightHeadIcon.width,
-                            height: rightHeadIcon.height,
-                            rotation: 180
+                            x: properties.rightHeadProps.x + (Graphite.ConnectionOptions.ICON_SCALE * 41),
+                            y: properties.rightHeadProps.y, // - (Graphite.ConnectionOptions.ICON_SCALE * 28),
+                            image: arrowIcon,
+                            scale: {x: -0.65, y: 0.65},
+                            opacity: Graphite.ConnectionOptions.UNFOCUS_OPACITY
                         });
                         this.add(rightHeadImage);
                         
                         var rightHeadText = new Kinetic.Text(
                         {
-                            x: properties.rightHeadProps.x - 48,
-                            y: properties.rightHeadProps.y + 7,
-                            text: 'Arrowhead',
+                            x: properties.rightHeadProps.x + 1,
+                            y: properties.rightHeadProps.y + 18,
+                            text: 'Arrow',
                             fontSize: 9,
                             fill: 'black',
-                            fontFamily:'Arial Black'
+                            fontFamily:'Arial Black',
+                            opacity: Graphite.ConnectionOptions.UNFOCUS_OPACITY
                         });
                         this.add(rightHeadText);
                         
                         rightHeadImage.on('mouseenter', function(event)
                         {
-                            this.shadowEnabled(true);
-                            this.opacity(0.3);
-                            
-                            rightHeadText.opacity(0.6);
+                            this.opacity(1);
+                            rightHeadText.opacity(1);
                             
                             this.getLayer().draw();
                         });
                         
                         rightHeadImage.on('mouseleave', function(event)
                         {
-                            this.shadowEnabled(false);
-                            this.opacity(1);
-                            
-                            rightHeadText.opacity(1);
+                            this.opacity(Graphite.ConnectionOptions.UNFOCUS_OPACITY);
+                            rightHeadText.opacity(Graphite.ConnectionOptions.UNFOCUS_OPACITY);
                             
                             this.getLayer().draw();
                         });
@@ -238,6 +209,7 @@ if(this.Graphite == null)
                         
                         this.getLayer().draw();
                     }.bind(this._overlay);
+                    
                     this._isShowing = true;
                 }
             };
@@ -279,6 +251,8 @@ if(this.Graphite == null)
             };
         };
         
+        Graphite.ConnectionOptions.ICON_SCALE = 0.8;
+        Graphite.ConnectionOptions.UNFOCUS_OPACITY = 0.6;
         Graphite.ConnectionOptions.ICON_DELETE_PATH = "img/web/delete_icon.gif";
         Graphite.ConnectionOptions.ICON_ARROW_PATH = "img/web/arrow_icon.gif";
     }

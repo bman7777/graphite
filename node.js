@@ -8,7 +8,7 @@ if(this.Graphite == null)
     // -- NODE definition
     function()
     {
-        Graphite._UNIQUE_NODE_ID = 0;
+        Graphite._UNIQUE_NODE_ID = 1;
         Graphite.Node = function(properties)
         {
             if(properties == null)
@@ -32,9 +32,9 @@ if(this.Graphite == null)
             
             this.add(new Kinetic.Text(
             {
-                x: -30,
+                x: -22,
                 y: -5,
-                text: 'NewNode'+Graphite._UNIQUE_NODE_ID,
+                text: 'Shape '+Graphite._UNIQUE_NODE_ID,
                 fontSize: 12,
                 fill: 'black',
                 fontFamily:'Permanent Marker'
