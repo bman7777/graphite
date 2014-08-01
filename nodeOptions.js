@@ -1,15 +1,15 @@
 
 if(this.Graphite == null)
 {
-	this.Graphite = {};
+    this.Graphite = {};
 }
 	
 (
-	// -- NODE-OPTIONS definition
-	function()
-	{
-		Graphite.NodeOptions = function(properties)
-		{
+    // -- NODE-OPTIONS definition
+    function()
+    {
+        Graphite.NodeOptions = function(properties)
+        {
             if(properties == null)
             {
                 properties = { deleteOption: {}, contentOption: {}, settingsOption: {}, bg: {} };
@@ -134,9 +134,9 @@ if(this.Graphite == null)
                         
                         var contentText = new Kinetic.Text(
                         {
-                            x: properties.contentProps.x - 13,
+                            x: properties.contentProps.x - 5,
                             y: properties.contentProps.y + 25,
-                            text: 'Content',
+                            text: 'Open',
                             fontSize: 9,
                             fill: 'black',
                             fontFamily:'Arial Black',
@@ -212,7 +212,7 @@ if(this.Graphite == null)
                         
                         settingsImage.on('click', function(event)
                         {
-                            // todo
+                            properties.settingsProps.action(node);
                         });
                         
                         this.getLayer().draw();

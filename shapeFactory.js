@@ -8,7 +8,7 @@ if(this.Graphite == null)
     // -- SHAPE factory
     function()
     {
-        Graphite.ShapeFactory = function(builder)
+        Graphite.ShapeFactory = function(builder, settings)
         {
             this._createCircle = function()
             {
@@ -82,9 +82,24 @@ if(this.Graphite == null)
                         break;
                 }
                 
+                this._unHighlightColor = Graphite.ShapeFactory.DEFAULT_FILL_COLOR;
+                
+                shape.unHighlightColor = function(color)
+                {
+                    if(color == undefined)
+                    {
+                        return this._unHighlightColor;
+                    }
+                    else
+                    {
+                        this._unHighlightColor = color;
+                    }
+                };
+                
                 shape.onHighlight = function()
                 {
                     this._isHighlighted = true;
+                    this._unHighlightColor = this.fill();
                     this.setFill('#EEEEEE');
                     this.setRadius(Graphite.ShapeFactory.DEFAULT_RADIUS + 4);
                     this.setShadowEnabled(true);
@@ -92,7 +107,7 @@ if(this.Graphite == null)
                 
                 shape.onUnHighlight = function()
                 {
-                    this.setFill(Graphite.ShapeFactory.DEFAULT_FILL_COLOR);
+                    this.setFill(this._unHighlightColor);
                     this.setRadius(Graphite.ShapeFactory.DEFAULT_RADIUS);
                     this.setShadowEnabled(false);
                     this._isHighlighted = false;
@@ -115,6 +130,7 @@ if(this.Graphite == null)
             {
                 var optionProps = { deleteProps:{}, contentProps:{}, settingsProps:{}};
                 optionProps.deleteProps.action =  function(node) { builder.removeNode(node); };
+                optionProps.settingsProps.action =  function(node) { builder.openSettings(node); };
                 
                 switch(type)
                 {

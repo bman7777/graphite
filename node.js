@@ -30,7 +30,7 @@ if(this.Graphite == null)
             this.add(this._shape);
             this.add(this._optionDisplay.getOverlay());
             
-            this.add(new Kinetic.Text(
+            this._shapeText = new Kinetic.Text(
             {
                 x: -22,
                 y: -5,
@@ -38,7 +38,8 @@ if(this.Graphite == null)
                 fontSize: 12,
                 fill: 'black',
                 fontFamily:'Permanent Marker'
-            }));
+            });
+            this.add(this._shapeText);
             
             // as we mouse enter, change node color and size
             this.on('mouseenter', function(event)
@@ -132,6 +133,23 @@ if(this.Graphite == null)
             this.getShape = function()
             {
                 return this._shape;
+            };
+            
+            this.text = function(txt)
+            {
+                if(txt == undefined)
+                {
+                    return this._shapeText.text();
+                }
+                else
+                {
+                    this._shapeText.text(txt);
+                }
+            };
+            
+            this.fill = function(color)
+            {
+                return this._shape.unHighlightColor(color);
             };
             
             this.isHighlighted = function()

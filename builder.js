@@ -39,6 +39,8 @@ if(this.Graphite == null)
             // make a factory for lines
             this._lineFactory = new Graphite.LineFactory(this);
 
+            this._shapeSettings = stageProps.shapeSettings;
+            
             // loop through children of the given layer and check isHighlighted
             this._findHighlightedChild = function(layer)
             {
@@ -109,6 +111,14 @@ if(this.Graphite == null)
                 
                 // destroy the node last
                 node.destroy();
+            };
+            
+            this.openSettings = function(node)
+            {
+                if(node != null)
+                {
+                    this._shapeSettings.open(node);
+                }
             };
             
             this.removeNode = function(node)

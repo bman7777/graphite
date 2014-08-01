@@ -112,12 +112,16 @@ if(this.GraphiteMenu == null)
                     var highlightId = icons[i].title+"Highlight";
                     
                     subMenu += "<td class='subMenuIcon' ";
-                    subMenu += "onmouseover=\"GraphiteMenu.onHighlightSubMenuIcon('"+highlightId+"')\" ";
-                    subMenu += "onmouseout=\"GraphiteMenu.UN_onHighlightSubMenuIcon('"+highlightId+"')\" ";
-                    subMenu += "onclick=\"GraphiteMenu.onClickSubMenuIcon("+icons[i].category+", "+icons[i].type+")\">";
-                    subMenu += "<a href=\"#\" title=\""+icons[i].desc+"\">";
-                    subMenu += "<div class='subMenuIconHighlight' style=\"background-image:url('"+icons[i].iconImg+"');\">";
-                    subMenu += "<img id='"+highlightId+"' style='visibility:hidden;' src='"+icons[i].highlightImg+"'/></div></a></td>";
+                    subMenu +=     "onmouseover=\"GraphiteMenu.onHighlightSubMenuIcon('"+highlightId+"')\" ";
+                    subMenu +=     "onmouseout=\"GraphiteMenu.UN_onHighlightSubMenuIcon('"+highlightId+"')\" ";
+                    subMenu +=     "onclick=\"GraphiteMenu.onClickSubMenuIcon("+icons[i].category+", "+icons[i].type+")\">";
+                    subMenu +=         "<a href=\"#\" title=\""+icons[i].desc+"\">";
+                    subMenu +=             "<div class='subMenuIconHighlight' style=\"background-image:url('"+icons[i].iconImg+"');\">";
+                    subMenu +=                 "<img id='"+highlightId+"' style='visibility:hidden;' ondragstart='return false;' ";
+                    subMenu +=                     "ondrop='return false;' src='"+icons[i].highlightImg+"'/>";
+                    subMenu +=             "</div>";
+                    subMenu +=         "</a>";
+                    subMenu += "</td>";
 
                     i++;
                 }

@@ -15,9 +15,11 @@
     <script src="lineFactory.js"></script>
     <script src="menu.js"></script>
     <script src="menuConfig.js"></script>
+    <script src="shapeSettings.js"></script>
     <script>
         var WINDOW_GUTTER = 25;
         var builder;
+        var shapeSettings;
         
         function initializeGraphite()
         {
@@ -25,7 +27,8 @@
             {
                 container: 'container',
                 width: window.innerWidth-WINDOW_GUTTER,
-                height: window.innerHeight-WINDOW_GUTTER
+                height: window.innerHeight-WINDOW_GUTTER,
+                shapeSettings: new Graphite.ShapeSettings("shapeSettings")
             });
         }
         
@@ -46,7 +49,7 @@
         function beginGraphite()
         {
             initializeGraphite();
-            buildMenu("menu", builder); 
+            buildMenu("menu", builder);
         }
         
         WebFontConfig = 
@@ -68,8 +71,8 @@
 	</script>
   
 	<style type="text/css">
-        p { font-family: 'Arial Black', sans-serif; font-size: 15px; }
-        p.menuTextOff { color: #7b7878; margin-left: 85px; margin-top: -35px; text-shadow: none; }
+        p { font-family: 'Arial Black', sans-serif; font-size: 15px; color: #7b7878; }
+        p.menuTextOff { margin-left: 85px; margin-top: -35px; text-shadow: none; }
         p.menuTextOn { color: #ffffff; margin-left: 85px; margin-top: -35px; text-shadow: 0px 1px 5px #333333; }
         ::selection { background: transparent; }
         div.menuRowOff { margin-left: 7px; margin-top: 4px; width: 153px; height: 45px; background-color: #e1e0e0; box-shadow: 5px 5px 5px #888888; }
@@ -89,6 +92,78 @@
             height: 117px; 
             margin-left: 15px;
         }
+        #shapeSettings
+        {
+            position: fixed; 
+            top: 20%; 
+            left: 30%; 
+            width: 500px;
+            background-color: #ffffff; 
+            box-shadow: 5px 5px 5px #888888;
+        }
+        #shapeSettingsRoot
+        {
+            width: 100%;
+            border-collapse:collapse;
+        }
+        td.shapeSettingsHeader 
+        {
+            background-color: #e1e0e0; 
+            height: 45px;
+            width: 100%;
+        }
+        p.shapeSettingsLabel
+        {
+            font-family: 'Arial';
+            font-size: 12px;
+            margin-left: 17px;
+        }
+        input.shapeSettingsInput
+        {
+            font-family: 'Arial';
+            font-size: 12px;
+            margin-left: 17px;
+        }
+        td.shapeSettingsRow
+        {
+            height: 45px;
+            border-bottom: 1px solid #7b7878;
+        }
+        tr.shapeSettingsFooter
+        {
+            background-color: #e1e0e0;
+            border-width: 0px;
+        }
+        td.shapeSettingsFooterSpacer
+        {
+            width: 150px;
+            //height: 36px;
+        }
+        div.shapeSettingsSave
+        {
+            border-radius: 3px;
+            background-color: #559dc9; // 257675
+            margin-left: 10px;
+            margin-right: 10px;
+            vertical-align:middle;
+        }
+        div.shapeSettingsCancel
+        {
+            border-radius: 3px;
+            background-color: #559dc9; // 257675
+            margin-left: 10px;
+            margin-right: 10px;
+            vertical-align:middle;
+        }
+        p.shapeSettingsButtonText
+        {
+            font-family: 'Arial Black';
+            font-size: 12px;
+            color: #ffffff;
+            text-align:center;
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
     </style>
     
 </head>
@@ -98,10 +173,10 @@
     <div id="container"></div>
     
     <a href="http://www.local-binary.com">
-        <div class="home" style="position: fixed; top: 15px;">
-        </div>
+        <div class="home" style="position: fixed; top: 15px;"></div>
     </a>
     
     <div id="menu" style="position: fixed; top: 130px; left: 15px"></div>
+    <div id="shapeSettings"></div>
 </body>
 </html>
