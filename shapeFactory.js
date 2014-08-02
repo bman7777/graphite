@@ -20,7 +20,7 @@ if(this.Graphite == null)
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
                     shadowEnabled: false,
                     shadowColor: '#555555',
-                    shadowOffset: 10,
+                    shadowOffset: {x:4, y: 4},
                     shadowOpacity: 0.5
                 };
                 
@@ -37,7 +37,7 @@ if(this.Graphite == null)
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
                     shadowEnabled: false,
                     shadowColor: '#555555',
-                    shadowOffset: 10,
+                    shadowOffset: {x:4, y: 4},
                     shadowOpacity: 0.5,
                     sides: 3
                 };
@@ -55,7 +55,7 @@ if(this.Graphite == null)
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
                     shadowEnabled: false,
                     shadowColor: '#555555',
-                    shadowOffset: 10,
+                    shadowOffset: {x:4, y: 4},
                     shadowOpacity: 0.5,
                     sides: 4,
                     rotationDeg: 45
@@ -100,16 +100,23 @@ if(this.Graphite == null)
                 {
                     this._isHighlighted = true;
                     this._unHighlightColor = this.fill();
-                    this.setFill('#EEEEEE');
+                    
+                    // average with white to get a brighter color
+                    var unhighlightRGB = Kinetic.Util.getRGB(this._unHighlightColor);
+                    var MAX_COLOR = 255;
+                    this.fill('rgb('+Math.round((unhighlightRGB.r + MAX_COLOR) / 2) +','+
+                                     Math.round((unhighlightRGB.g + MAX_COLOR) / 2) +','+
+                                     Math.round((unhighlightRGB.b + MAX_COLOR) / 2) +')');
+                    
                     this.setRadius(Graphite.ShapeFactory.DEFAULT_RADIUS + 4);
-                    this.setShadowEnabled(true);
+                    this.shadowEnabled(true);
                 };
                 
                 shape.onUnHighlight = function()
                 {
                     this.setFill(this._unHighlightColor);
                     this.setRadius(Graphite.ShapeFactory.DEFAULT_RADIUS);
-                    this.setShadowEnabled(false);
+                    this.shadowEnabled(false);
                     this._isHighlighted = false;
                 };
                 

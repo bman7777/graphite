@@ -22,7 +22,8 @@ if(this.Graphite == null)
                 // save off for later if/when we save changes
                 this._pendingShape = shape;
                 
-                var buttons = ['saveButton', 'cancelButton'];
+                var buttons = [{id:'saveButton', text:'Save', desc:'Save Changes'}, {id:'cancelButton', text:'Cancel', desc:'Cancel Changes'}];
+                
                 var popupData = "<tr><td class='shapeSettingsHeader' colspan='3'><p style='margin-left: 15px'>Settings</p></td></tr>";
                 popupData +=    "<tr><td class='shapeSettingsRow' colspan='3'>";
                 popupData +=        "<p class='shapeSettingsLabel'>Name:";
@@ -41,20 +42,24 @@ if(this.Graphite == null)
                 popupData +=    "</td></tr>";
                 popupData +=    "<tr class='shapeSettingsFooter'>";
                 popupData +=        "<td class='shapeSettingsFooterSpacer'></td>";
-                popupData +=        "<td id='"+buttons[0]+"'><a href='#' title='Save changes'><div class='shapeSettingsSave'>";
-                popupData +=            "<p class='shapeSettingsButtonText'>Save</p></div></a>";
-                popupData +=        "</td>";
-                popupData +=        "<td id='"+buttons[1]+"'><a href='#' title='Cancel changes'><div class='shapeSettingsCancel'>";
-                popupData +=            "<p class='shapeSettingsButtonText'>Cancel</p></div></a>";
-                popupData +=        "</td>";
+                
+                for(var i = 0; i < buttons.length; i++)
+                {
+                    popupData +=    "<td id='"+buttons[i].id+"'><a href='#' title='"+buttons[i].desc+"'>";
+                    popupData +=        "<div class='shapeSettingsButton'>"+buttons[i].text+"</div></a>";
+                    popupData +=    "</td>";
+                }
+                
                 popupData +=    "</tr>";
                 
                 document.getElementById(this._rootId).innerHTML = popupData;
                 
                 for(var i = 0; i < buttons.length; i++)
                 {
-                    var button = document.getElementById(buttons[i]);
+                    var button = document.getElementById(buttons[i].id);
                     button.onclick = this._onClickButton;
+                    button.onmouseover = this.onHighlightButton;
+                    button.onmouseout = this.onUnHighlightButton;
                 }
                 
                 // show the popup
@@ -86,6 +91,16 @@ if(this.Graphite == null)
                 
                 this.close();
             }.bind(this);
+            
+            this.onHighlightButton = function(event)
+            {
+                event.srcElement.style.borderColor = "#257675";
+            };
+            
+            this.onUnHighlightButton = function(event)
+            {
+                event.srcElement.style.borderColor = "transparent";
+            };
         };
     }
 )();

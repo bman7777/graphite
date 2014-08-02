@@ -30,10 +30,13 @@ if(this.Graphite == null)
             this.add(this._shape);
             this.add(this._optionDisplay.getOverlay());
             
+            var TEXT_SIZE_FACTOR = 1.2;
             this._shapeText = new Kinetic.Text(
             {
-                x: -22,
+                x: -1 * (TEXT_SIZE_FACTOR/2) * this._shape.getRadius(),
                 y: -5,
+                width: this._shape.getRadius() * TEXT_SIZE_FACTOR,
+                align: 'center',
                 text: 'Shape '+Graphite._UNIQUE_NODE_ID,
                 fontSize: 12,
                 fill: 'black',

@@ -29,7 +29,7 @@ if(this.GraphiteMenu == null)
                 var textId = props.title+"Label";
                 
                 var menuItem = "<tr onmouseover=\"GraphiteMenu.onHighlightItem('"+highlightId+"', '"+textId+"')\" ";
-                menuItem += "onmouseout=\"GraphiteMenu.UN_onHighlightItem('"+highlightId+"', '"+textId+"')\" ";
+                menuItem +=        "onmouseout=\"GraphiteMenu.UN_onHighlightItem('"+highlightId+"', '"+textId+"')\" ";
                 
                 if(props.title == "Select")
                 {
@@ -115,12 +115,7 @@ if(this.GraphiteMenu == null)
                     subMenu +=     "onmouseover=\"GraphiteMenu.onHighlightSubMenuIcon('"+highlightId+"')\" ";
                     subMenu +=     "onmouseout=\"GraphiteMenu.UN_onHighlightSubMenuIcon('"+highlightId+"')\" ";
                     subMenu +=     "onclick=\"GraphiteMenu.onClickSubMenuIcon("+icons[i].category+", "+icons[i].type+")\">";
-                    subMenu +=         "<a href=\"#\" title=\""+icons[i].desc+"\">";
-                    subMenu +=             "<div class='subMenuIconHighlight' style=\"background-image:url('"+icons[i].iconImg+"');\">";
-                    subMenu +=                 "<img id='"+highlightId+"' style='visibility:hidden;' ondragstart='return false;' ";
-                    subMenu +=                     "ondrop='return false;' src='"+icons[i].highlightImg+"'/>";
-                    subMenu +=             "</div>";
-                    subMenu +=         "</a>";
+                    subMenu +=         "<div class='subMenuIconHighlight' id='"+highlightId+"' style=\"background-image:url('"+icons[i].iconImg+"');\"/>";
                     subMenu += "</td>";
 
                     i++;
@@ -151,7 +146,7 @@ if(this.GraphiteMenu == null)
             if(iconHighlightId != null)
             {
                 // set the highlight overlay
-                document.getElementById(iconHighlightId).style.visibility = "visible";
+                document.getElementById(iconHighlightId).style.borderColor = "#559dc9";
             }
         };
         
@@ -161,7 +156,7 @@ if(this.GraphiteMenu == null)
             if(iconHighlightId != null)
             {
                 // clear the highlight overlay
-                document.getElementById(iconHighlightId).style.visibility = "hidden";
+                document.getElementById(iconHighlightId).style.borderColor = "transparent";
             }
         };
         
