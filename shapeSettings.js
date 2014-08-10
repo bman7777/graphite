@@ -79,13 +79,15 @@ if(this.Graphite == null)
             
             this._onClickButton = function(event)
             {
-                if(event.srcElement.textContent == 'Save')
+                var target = event.target || event.srcElement;
+                if(target.textContent == 'Save')
                 {
                     this._pendingShape.getShape().fill(document.getElementById('colorInput').value);
                     this._pendingShape.text(document.getElementById('nameInput').value);
                     
                     // TODO: save off file link
                     
+                    this._pendingShape.cache();
                     this._pendingShape.draw();
                 }
                 

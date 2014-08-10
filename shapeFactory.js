@@ -10,6 +10,17 @@ if(this.Graphite == null)
     {
         Graphite.ShapeFactory = function(builder, settings)
         {
+            // $HACK Start$ Kinetic bug that doesn't cache properly
+            Kinetic.Circle.prototype._useBufferCanvas = function() 
+            {
+                return false;
+            };
+            Kinetic.RegularPolygon.prototype._useBufferCanvas = function() 
+            {
+                return false;
+            };
+            // $HACK end$
+            
             this._createCircle = function()
             {
                 var shapeProps = 

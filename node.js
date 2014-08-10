@@ -21,6 +21,13 @@ if(this.Graphite == null)
             
             Kinetic.Group.call(this, properties);
             
+            // $HACK Start$ Kinetic bug that doesn't cache properly
+            Kinetic.Group.prototype._useBufferCanvas = function() 
+            {
+                return false;
+            };
+            // $HACK end$
+            
             // set our option display
             this._optionDisplay = properties.options;
             this.add(this._optionDisplay.getBackground());
@@ -48,6 +55,8 @@ if(this.Graphite == null)
             this.on('mouseenter', function(event)
             {
                 this._shape.onHighlight();
+                
+                this.cache();
                 this.getLayer().draw();
             });
             
@@ -55,6 +64,8 @@ if(this.Graphite == null)
             this.on('mouseleave', function(event)
             {
                 this._shape.onUnHighlight();
+                
+                this.cache();
                 this.getLayer().draw();
             });
             
@@ -165,6 +176,43 @@ if(this.Graphite == null)
                 return this._optionDisplay;
             };
             
+            this.cache = function(config)
+            {
+                if(config == undefined)
+                {
+                    config = {};
+                }
+                
+                var sizeScalar = 1.8;
+                var radius = this._shape.radius();
+                
+                if(config.x == undefined)
+                {
+                    config.x = -1 * sizeScalar * radius;
+                }
+                
+                if(config.y == undefined)
+                {
+                    config.y = -1 * sizeScalar * radius;
+                }
+                
+                if(config.width == undefined)
+                {
+                    config.width = 2 * sizeScalar * radius;
+                }
+                
+                if(config.height == undefined)
+                {
+                    config.height = 2 * sizeScalar * radius;
+                }
+                
+                Kinetic.Group.prototype.cache.call(this, config).offset(
+                {
+                    x: sizeScalar * radius,
+                    y: sizeScalar * radius
+                });
+            };
+            
             this.destroy = function()
             {
                 this.off("dragmove dblclick mouseenter mouseleave");
@@ -177,6 +225,8 @@ if(this.Graphite == null)
             {
                 if(properties.getState() == Graphite.Builder.STATE_SELECT)
                 {
+                    this.clearCache().offset({x:0, y:0});
+                    
                     if(!this._optionDisplay.isShowing())
                     {
                         this._optionDisplay.show(this);

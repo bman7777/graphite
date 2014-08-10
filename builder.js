@@ -231,6 +231,9 @@ if(this.Graphite == null)
                             // now that this node is final, make it opaque
                             this._pendingNode.setOpacity(1);
                             
+                            // optimize by caching off node
+                            this._pendingNode.cache();
+                            
                             // now we are finalized and no need to be 'pending', so kill reference
                             this._pendingNode = null;
                             
@@ -246,8 +249,6 @@ if(this.Graphite == null)
                             
                             // we are in selecting mode now
                             this.enterSelectionState();
-                            
-                            //event.evt.preventDefault();
                             break;
                         }
                     }
