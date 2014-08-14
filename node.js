@@ -54,9 +54,10 @@ if(this.Graphite == null)
             // as we mouse enter, change node color and size
             this.on('mouseenter', function(event)
             {
+                this.clearCache().offset({x:0, y:0});
+                
                 this._shape.onHighlight();
                 
-                this.cache();
                 this.getLayer().draw();
             });
             
@@ -225,8 +226,6 @@ if(this.Graphite == null)
             {
                 if(properties.getState() == Graphite.Builder.STATE_SELECT)
                 {
-                    this.clearCache().offset({x:0, y:0});
-                    
                     if(!this._optionDisplay.isShowing())
                     {
                         this._optionDisplay.show(this);

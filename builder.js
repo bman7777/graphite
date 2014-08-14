@@ -33,13 +33,15 @@ if(this.Graphite == null)
             this._nodeLayer = new Kinetic.Layer();
             stage.add(this._nodeLayer);
             
+            this._fileOptions = new Graphite.FileOptions(stage);
+            
             // make a factory for nodes
             this._nodeFactory = new Graphite.ShapeFactory(this);
             
             // make a factory for lines
             this._lineFactory = new Graphite.LineFactory(this);
 
-            this._shapeSettings = stageProps.shapeSettings;
+            this._popup = stageProps.popup;
             
             // loop through children of the given layer and check isHighlighted
             this._findHighlightedChild = function(layer)
@@ -113,12 +115,22 @@ if(this.Graphite == null)
                 node.destroy();
             };
             
-            this.openSettings = function(node)
+            this.openPopup = function(settings, buttons)
             {
-                if(node != null)
+                if(settings != null && buttons != null)
                 {
-                    this._shapeSettings.open(node);
+                    this._popup.open(settings, buttons);
                 }
+            };
+            
+            this.closePopup = function()
+            {
+                this._popup.close();
+            };
+            
+            this.openContent = function(node)
+            {
+                window.location.href = "CodeEditor/code-editor.html?name=test.xml&parent=test.json";
             };
             
             this.removeNode = function(node)
@@ -180,6 +192,24 @@ if(this.Graphite == null)
                     }
                     
                     this._canvasListeners = null;
+                }
+            };
+            
+            this.processFile = function(type)
+            {
+                switch(type)
+                {
+                    case Graphite.FileOptions.SAVE:
+                        this._fileOptions.newFile();
+                        break;
+                    
+                    case Graphite.FileOptions.SAVE:
+                        this._fileOptions.save();
+                        break;
+                        
+                    case Graphite.FileOptions.LOAD:
+                        this._fileOptions.load();
+                        break;
                 }
             };
             
@@ -461,6 +491,7 @@ if(this.Graphite == null)
         
         Graphite.Builder.CATEGORY_NODE = 0;
         Graphite.Builder.CATEGORY_CONNECTION = 1;
+        Graphite.Builder.CATEGORY_FILE = 2;
         
         Graphite.Builder.STATE_SELECT = 0;
         Graphite.Builder.STATE_NODE = 1;

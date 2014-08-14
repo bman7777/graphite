@@ -40,9 +40,13 @@ if(this.GraphiteMenu == null)
                     menuItem += "onclick=\"GraphiteMenu.onToggleSubMenu('"+subMenuId+"')\">";
                 }
                 
-                menuItem += "<td><a href=\"#\" title=\""+props.desc+"\"><div class=\"menuRowOff\" id=\""+highlightId+"\">";
-                menuItem += "<div class=\"menuIcon\" style=\"background-image:url('"+props.iconImg+"');\"></div>";
-                menuItem += "</div><p class=\"menuTextOff\" id=\""+textId+"\">"+props.title+"</p></a></td></tr>";
+                menuItem += "<td><a href=\"#\" title=\""+props.desc+"\">";
+                menuItem +=     "<div class=\"menuRowOff\" id=\""+highlightId+"\">";
+                menuItem +=         "<div class=\"menuIcon\" style=\"background-image:url('"+props.iconImg+"');\"></div>";
+                menuItem +=     "</div>";
+                menuItem +=     "<p class=\"menuTextOff\" id=\""+textId+"\">"+props.title+"</p>";
+                menuItem += "</a></td>";
+                menuItem +  "</tr>";
                 
                 document.getElementById(mountId).innerHTML += menuItem;
                 
@@ -93,44 +97,46 @@ if(this.GraphiteMenu == null)
                 subMenu += "<table class='subMenu'><tr></tr>";
                 
                 var MAX_ICONS_PER_ROW = 2;
-                var i = 0;
+                var MAX_ROWS = 2;
                 
                 // loop through each icon and add them to a td in the submenu
-                while(i < icons.length)
+                for(var i = 0; i < (MAX_ICONS_PER_ROW * MAX_ROWS); i++)
                 {
                     // if this is the first icon (of the row) initialize the tr
-                    if(i%MAX_ICONS_PER_ROW == 0)
+                    if(i % MAX_ICONS_PER_ROW == 0)
                     {
+                        // if we had a previous row in progress end that row
                         if(i > 0)
                         {
-                            subMenu += "<td></td></tr>";
+                            subMenu += "<td class='subMenuGutter'></td></tr>";
                         }
                         
-                        subMenu += "<tr><td class='subMenuLeftGutter'></td>";
+                        subMenu += "<tr><td class='subMenuGutter'></td>";
                     }
                     
-                    var highlightId = icons[i].title+"Highlight";
-                    
-                    subMenu += "<td class='subMenuIcon' ";
-                    subMenu +=     "onmouseover=\"GraphiteMenu.onHighlightSubMenuIcon('"+highlightId+"')\" ";
-                    subMenu +=     "onmouseout=\"GraphiteMenu.UN_onHighlightSubMenuIcon('"+highlightId+"')\" ";
-                    subMenu +=     "onclick=\"GraphiteMenu.onClickSubMenuIcon("+icons[i].category+", "+icons[i].type+")\">";
-                    subMenu +=         "<div class='subMenuIconHighlight' id='"+highlightId+"' style=\"background-image:url('"+icons[i].iconImg+"');\"/>";
-                    subMenu += "</td>";
-
-                    i++;
-                }
-                
-                // end off the tr if we didn't cleanly reach an end
-                if(i % MAX_ICONS_PER_ROW != 0)
-                {
-                    while(i % MAX_ICONS_PER_ROW != 0)
+                    if(i < icons.length)
                     {
-                        subMenu += "<td></td>";
-                        i++;
+                        var highlightId = icons[i].title+"Highlight";
+                        
+                        subMenu += "<td class='subMenuIcon' ";
+                        subMenu +=     "onmouseover=\"GraphiteMenu.onHighlightSubMenuIcon('"+highlightId+"')\" ";
+                        subMenu +=     "onmouseout=\"GraphiteMenu.UN_onHighlightSubMenuIcon('"+highlightId+"')\" ";
+                        subMenu +=     "onclick=\"GraphiteMenu.onClickSubMenuIcon("+icons[i].category+", "+icons[i].type+")\">";
+                        subMenu +=         "<a href='#' title='"+icons[i].desc+"'>";
+                        subMenu +=             "<div class='subMenuIconHighlight' id='"+highlightId+"' style=\"background-image:url('"+icons[i].iconImg+"');\"></div>";
+                        subMenu +=         "</a>";
+                        subMenu += "</td>";
+                    }
+                    else
+                    {
+                        subMenu += "<td class='subMenuGutter'></td>";
                     }
                     
-                    subMenu += "<td></td></tr>";
+                    // if this is the last icon of the last row, end it now
+                    if((i+1) == (MAX_ICONS_PER_ROW * MAX_ROWS))
+                    {
+                        subMenu += "<td class='subMenuGutter'></td></tr>";
+                    }
                 }
                 
                 // end the table
@@ -176,6 +182,11 @@ if(this.GraphiteMenu == null)
                 case Graphite.Builder.CATEGORY_CONNECTION:
                     // this will setup the potential for a new line
                     this._graphiteBuilder.readyForNewConnection(type);
+                    break;
+                    
+                case Graphite.Builder.CATEGORY_FILE:
+                    // this will setup a save or load
+                    this._graphiteBuilder.processFile(type);
                     break;
                     
                 default:

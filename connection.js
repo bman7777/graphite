@@ -271,10 +271,10 @@ if(this.Graphite == null)
                 var centerPoint = Graphite.MathUtil.GetCenterPoint(startPt.x, startPt.y, endPt.x, endPt.y);
                 
                 // update options display
-                this._optionDisplay.getBackground().x(centerPoint.x); // + 55);
-                this._optionDisplay.getBackground().y(centerPoint.y); // + 90);
-                this._optionDisplay.getOverlay().x(centerPoint.x); // + 55);
-                this._optionDisplay.getOverlay().y(centerPoint.y); // + 90);
+                this._optionDisplay.getBackground().x(centerPoint.x);
+                this._optionDisplay.getBackground().y(centerPoint.y);
+                this._optionDisplay.getOverlay().x(centerPoint.x);
+                this._optionDisplay.getOverlay().y(centerPoint.y);
                 
                 this.draw();
                 

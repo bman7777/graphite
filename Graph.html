@@ -3,7 +3,8 @@
 <head>
     <title>Graphite</title>
     <link rel="SHORTCUT ICON" href="http://www.local-binary.com/root/img/web/localbinaryicon.ico" />
-
+	<link rel="stylesheet" type="text/css" href="Graph.css">
+	
     <script src="kinetic-v5.1.0.min.js"></script>
     <script src="mathutil.js"></script>
     <script src="builder.js"></script>
@@ -14,8 +15,9 @@
     <script src="connectionOptions.js"></script>
     <script src="lineFactory.js"></script>
     <script src="menu.js"></script>
+    <script src="fileOptions.js"></script>
     <script src="menuConfig.js"></script>
-    <script src="shapeSettings.js"></script>
+    <script src="popup.js"></script>
     <script>
         var WINDOW_GUTTER = 25;
         var builder;
@@ -28,7 +30,7 @@
                 container: 'container',
                 width: window.innerWidth-WINDOW_GUTTER,
                 height: window.innerHeight-WINDOW_GUTTER,
-                shapeSettings: new Graphite.ShapeSettings("shapeSettings")
+                popup: new Graphite.Popup("popup")
             });
         }
         
@@ -69,106 +71,6 @@
             s.parentNode.insertBefore(wf, s);
         })();
 	</script>
-  
-	<style type="text/css">
-        p { font-family: 'Arial Black', sans-serif; font-size: 15px; color: #7b7878; }
-        p.menuTextOff { margin-left: 85px; margin-top: -35px; text-shadow: none; }
-        p.menuTextOn { color: #ffffff; margin-left: 85px; margin-top: -35px; text-shadow: 0px 1px 5px #333333; }
-        ::selection { background: #559dc9; }
-        div.menuRowOff { margin-left: 7px; margin-top: 4px; width: 153px; height: 45px; background-color: #e1e0e0; box-shadow: 5px 5px 5px #888888; }
-        div.menuRowOn { margin-left: 7px; margin-top: 4px; width: 153px; height: 45px; background-color: #6fb4de; box-shadow: 5px 5px 5px #888888; }
-        div.menuIcon { background-repeat: no-repeat; background-size:104px 45px; width: 104px; height: 45px; background-position: -8px 0px; }
-        a { text-decoration: none; }
-        table.subMenu { margin-left: 12px; background-image:url('img/web/submenu_bg.png'); background-repeat: no-repeat; width: 149px; height: 161px; }
-        td.subMenuIcon { width: 44px; height: 45px; }
-        td.subMenuLeftGutter { width: 15px; }
-        div.subMenuIconHighlight
-        { 
-            margin-left: -5px; 
-            margin-top: -5px;
-            background-repeat: no-repeat; 
-            background-size:45px 45px;
-            width: 45px;
-            height: 45px; 
-            border-style: solid; 
-            border-color: transparent; 
-            border-width: 3px;
-        }
-        div.home 
-        { 
-            background-image:url('img/web/localbinary.gif'); 
-            background-repeat: no-repeat; 
-            background-size: contain; 
-            width: 100px; 
-            height: 117px; 
-            margin-left: 15px;
-        }
-        #shapeSettings
-        {
-            position: fixed; 
-            top: 20%; 
-            left: 30%; 
-            width: 500px;
-            background-color: #ffffff; 
-            box-shadow: 5px 5px 5px #888888;
-        }
-        #shapeSettingsRoot
-        {
-            width: 100%;
-            border-collapse:collapse;
-        }
-        td.shapeSettingsHeader 
-        {
-            background-color: #e1e0e0; 
-            height: 45px;
-            width: 100%;
-        }
-        p.shapeSettingsLabel
-        {
-            font-family: 'Arial';
-            font-size: 12px;
-            margin-left: 17px;
-        }
-        input.shapeSettingsInput
-        {
-            font-family: 'Arial';
-            font-size: 12px;
-            margin-left: 17px;
-        }
-        td.shapeSettingsRow
-        {
-            height: 45px;
-            border-bottom: 1px solid #7b7878;
-        }
-        tr.shapeSettingsFooter
-        {
-            background-color: #e1e0e0;
-            border-width: 0px;
-        }
-        td.shapeSettingsFooterSpacer
-        {
-            width: 150px;
-        }
-        div.shapeSettingsButton
-        {
-            border-radius: 3px;
-            background-color: #559dc9; // 257675
-            margin-left: 10px;
-            margin-right: 10px;
-            margin-top: 5px;
-            margin-bottom: 5px;
-            vertical-align:middle;
-            height: 22px;
-            border-style: solid; 
-            border-color: transparent; 
-            border-width: 2px;
-            font-family: 'Arial Black';
-            font-size: 12px;
-            color: #ffffff;
-            text-align:center;
-            padding-top: 5px;
-        }
-    </style>
     
 </head>
 <body style="background-image:url('img/web/graphtile-new.gif')"
@@ -181,6 +83,6 @@
     </a>
     
     <div id="menu" style="position: fixed; top: 130px; left: 15px"></div>
-    <div id="shapeSettings"></div>
+    <div id="popup"></div>
 </body>
 </html>

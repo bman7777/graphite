@@ -148,7 +148,8 @@ if(this.Graphite == null)
             {
                 var optionProps = { deleteProps:{}, contentProps:{}, settingsProps:{}};
                 optionProps.deleteProps.action =  function(node) { builder.removeNode(node); };
-                optionProps.settingsProps.action =  function(node) { builder.openSettings(node); };
+                optionProps.settingsProps.action =  function(settings, buttons) { builder.openPopup(settings, buttons); };
+                optionProps.contentProps.action =  function(node) { builder.openContent(node); };
                 
                 switch(type)
                 {

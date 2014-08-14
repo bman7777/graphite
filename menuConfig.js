@@ -9,6 +9,35 @@ if(this.GraphiteMenu == null)
     {
         GraphiteMenu.CONFIG = function(root)
         {
+            var fileSubMenuId = GraphiteMenu.addMenuItem(root, 
+            {
+                title:"File", 
+                desc:"Save/Load a Graph", 
+                iconImg:"img/web/fileIcon.gif"
+            });
+            GraphiteMenu.addSubMenu(root, fileSubMenuId, 
+            [{
+                title:"New",
+                iconImg:"img/web/new.gif",
+                desc:"New Graph",
+                type:Graphite.FileOptions.NEW,
+                category:Graphite.Builder.CATEGORY_FILE
+            },
+            {
+                title:"Save",
+                iconImg:"img/web/save.gif",
+                desc:"Save Graph to a File",
+                type:Graphite.FileOptions.SAVE,
+                category:Graphite.Builder.CATEGORY_FILE
+            },
+            {
+                title:"Load",
+                iconImg:"img/web/open.gif",
+                desc:"Load a Graph",
+                type:Graphite.FileOptions.LOAD,
+                category:Graphite.Builder.CATEGORY_FILE
+            }]);
+            
             GraphiteMenu.addMenuItem(root, 
             {
                 title:"Select", 

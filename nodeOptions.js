@@ -162,12 +162,13 @@ if(this.Graphite == null)
                         
                         contentImage.on('click', function(event)
                         {
-                            // todo
+                            properties.contentProps.action(node);
                         });
                         
                         this.getLayer().draw();
                     }.bind(this._overlay);
                     
+                    var optionContext = this;
                     var settingsIcon = new Image();
                     settingsIcon.src = Graphite.NodeOptions.ICON_SETTINGS_PATH;
                     settingsIcon.onload = function() 
@@ -212,13 +213,37 @@ if(this.Graphite == null)
                         
                         settingsImage.on('click', function(event)
                         {
-                            properties.settingsProps.action(node);
+                            var settings = 
+                            [
+                                {id:'nameInput', text:'Name:', type:'text', value:node.text()}, 
+                                {id:'colorInput', text:'Color:', type:'color', value:node.fill()},
+                                {id:'fileInput', text:'File:', type:'file'}
+                            ];
+                            
+                            var buttons = 
+                            [
+                               {id:'saveButton', text:'Save', desc:'Save Changes', onClickCallback:optionContext._onClickSaveSettings.bind(optionContext, node)}, 
+                               {id:'cancelButton', text:'Cancel', desc:'Cancel Changes'}
+                            ];
+                            
+                            properties.settingsProps.action(settings, buttons);
                         });
                         
                         this.getLayer().draw();
                     }.bind(this._overlay);
                     this._isShowing = true;
                 }
+            };
+            
+            this._onClickSaveSettings = function(modifiedNode)
+            {
+                modifiedNode.getShape().fill(document.getElementById('colorInput').value);
+                modifiedNode.text(document.getElementById('nameInput').value);
+                
+                // TODO: save off file link
+                
+                modifiedNode.cache();
+                modifiedNode.draw();
             };
             
             this.hide = function(node)
