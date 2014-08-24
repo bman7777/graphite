@@ -17,29 +17,36 @@ if(this.Graphite == null)
                 this._container.innerHTML = "<table id=\""+this._rootId+"\"></table>";
             }
             
-            this.open = function(settings, buttons)
+            this.open = function(title, settings, buttons)
             {
-                var popupData = "<tr><td class='popupHeader' colspan='3'><p style='margin-left: 15px'>Settings</p></td></tr>";
+                var popupData = "<tr><td class=\"popupHeader\" colspan=\"3\"><p style=\"margin-left: 15px\">"+title+"</p></td></tr>";
                 for(var i = 0; i < settings.length; i++)
                 {
-                    popupData +=    "<tr><td class='popupRow' colspan='3'>";
-                    popupData +=        "<p class='popupLabel'>"+settings[i].text;
-                    popupData +=            "<input id='"+settings[i].id+"' class='popupInput' type='"+settings[i].type+"' value='"+settings[i].value+"'/>";
+                    popupData +=    "<tr><td class=\"popupRow\" colspan=\"3\">";
+                    popupData +=        "<p class=\"popupLabel\">"+settings[i].text;
+                    if(settings[i].type != "message")
+                    {
+                        if(settings[i].attribute == undefined)
+                        {
+                            settings[i].attribute = ""; 
+                        }
+                        popupData +=        "<input id=\""+settings[i].id+"\" class=\"popupInput\" type=\""+settings[i].type+"\" "+settings[i].attribute+"value=\""+settings[i].value+"\"/>";
+                    }
                     popupData +=        "</p>";
                     popupData +=    "</td></tr>";
                 }
 
-                popupData +=    "<tr class='popupFooter'>";
-                popupData +=        "<td class='popupFooterSpacer'></td>";
+                popupData +=    "<tr class=\"popupFooter\">";
+                popupData +=        "<td class=\"popupFooterSpacer\"></td>";
                 
                 for(var i = 0; i < buttons.length; i++)
                 {
-                    popupData +=    "<td id='"+buttons[i].id+"'><a href='#' title='"+buttons[i].desc+"'>";
-                    popupData +=        "<div class='popupButton'>"+buttons[i].text+"</div></a>";
+                    popupData +=    "<td id=\""+buttons[i].id+"\"><a href=\"#\" title=\""+buttons[i].desc+"\">";
+                    popupData +=        "<div class=\"popupButton\">"+buttons[i].text+"</div></a>";
                     popupData +=    "</td>";
                 }
                 
-                popupData +=    "</tr>";
+                popupData += "</tr>";
                 
                 document.getElementById(this._rootId).innerHTML = popupData;
                 
@@ -55,9 +62,9 @@ if(this.Graphite == null)
                 this._container.style.visibility = "visible";
             };
             
-            this._onClickButton = function(callback)
+            this._onClickButton = function(callback, event)
             {
-                if(callback == null || callback() != false)
+                if(callback == null || callback(event) != false)
                 {
                     this.close();
                 }

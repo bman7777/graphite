@@ -223,10 +223,10 @@ if(this.Graphite == null)
                             var buttons = 
                             [
                                {id:'saveButton', text:'Save', desc:'Save Changes', onClickCallback:optionContext._onClickSaveSettings.bind(optionContext, node)}, 
-                               {id:'cancelButton', text:'Cancel', desc:'Cancel Changes'}
+                               {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
                             ];
                             
-                            properties.settingsProps.action(settings, buttons);
+                            properties.settingsProps.action("Settings", settings, buttons);
                         });
                         
                         this.getLayer().draw();

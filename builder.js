@@ -33,7 +33,7 @@ if(this.Graphite == null)
             this._nodeLayer = new Kinetic.Layer();
             stage.add(this._nodeLayer);
             
-            this._fileOptions = new Graphite.FileOptions(stage);
+            this._fileOptions = new Graphite.FileOptions(this);
             
             // make a factory for nodes
             this._nodeFactory = new Graphite.ShapeFactory(this);
@@ -115,11 +115,11 @@ if(this.Graphite == null)
                 node.destroy();
             };
             
-            this.openPopup = function(settings, buttons)
+            this.openPopup = function(title, settings, buttons)
             {
                 if(settings != null && buttons != null)
                 {
-                    this._popup.open(settings, buttons);
+                    this._popup.open(title, settings, buttons);
                 }
             };
             
@@ -199,7 +199,7 @@ if(this.Graphite == null)
             {
                 switch(type)
                 {
-                    case Graphite.FileOptions.SAVE:
+                    case Graphite.FileOptions.NEW:
                         this._fileOptions.newFile();
                         break;
                     
@@ -486,6 +486,21 @@ if(this.Graphite == null)
                 
                 // redraw the deleted change(s)
                 this._connectionLayer.draw();  
+            };
+            
+            this.clear = function()
+            {
+                var listChildren = this._connectionLayer.getChildren();
+                for(var i = listChildren.length - 1; i >= 0; i--)
+                {
+                    this.removeConnection(listChildren[i]);
+                }
+                
+                listChildren = this._nodeLayer.getChildren();
+                for(var i = listChildren.length - 1; i >= 0; i--)
+                {
+                    this.removeNode(listChildren[i]);
+                }
             };
         };
         
