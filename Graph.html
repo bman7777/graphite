@@ -32,7 +32,7 @@
                 container: 'container',
                 width: window.innerWidth-WINDOW_GUTTER,
                 height: window.innerHeight-WINDOW_GUTTER,
-                popup: new Graphite.Popup("popup")
+                popup: new Graphite.Popup("popup", "popupScrim")
             });
         }
         
@@ -85,6 +85,7 @@
     </a>
     
     <div id="menu" style="position: fixed; top: 130px; left: 15px"></div>
+    <div id="popupScrim"></div>
     <div id="popup"></div>
 </body>
 </html>

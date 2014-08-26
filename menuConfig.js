@@ -31,9 +31,9 @@ if(this.GraphiteMenu == null)
                 category:Graphite.Builder.CATEGORY_FILE
             },
             {
-                title:"Load",
+                title:"Open",
                 iconImg:"img/web/open.gif",
-                desc:"Load a Graph",
+                desc:"Open a Graph",
                 type:Graphite.FileOptions.LOAD,
                 category:Graphite.Builder.CATEGORY_FILE
             }]);

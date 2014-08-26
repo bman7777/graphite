@@ -54,11 +54,9 @@ if(this.Graphite == null)
             
             this.newFile = function()
             {
-                var settings = 
-                [
-                    {id:'warningInput', text:"Creating a new file will wipe out all progress.  Are you sure?", type:"message"}, 
-                    {id:'fileNameInput', text:'File:', type:'text', value:"New File"}
-                ];
+                var settings = new Array();
+                settings[0] = [{id:'warningInput', text:"Creating a new file will wipe out all progress.  Are you sure?", type:"message"}]; 
+                settings[1] = [{id:'fileNameInput', text:'File:', type:'text', value:"New File"}];
                 
                 var buttons = 
                 [
@@ -92,6 +90,8 @@ if(this.Graphite == null)
                 }
                 else
                 {
+                    // todo- if it ends in .xml we should cut that off since we append later
+                    
                     // if filename is valid, clear everything and use this as filename
                     this._filename = fileName;
                     return true;
@@ -117,26 +117,38 @@ if(this.Graphite == null)
             
             this._onSaveAuthorizationReady = function()
             {
+                var settings = new Array();
+                settings[0] = [{id:'msgInput', text:"Pick a name for your file before saving.", type:"message"}];
+                settings[1] = [
+                    {id:'fileNameInput', text:'New File:', type:'text', value:"New File"},
+                    {id:'nameButton', value:'Save', type:'button', desc:'Save the file', 
+                         onClickCallback:this._onSaveCallback.bind(this)}
+                ];
+            
                 if(!this._isFileNameValid(this._filename))
                 {
-                    var settings = 
-                    [
-                        {id:'msgInput', text:"Pick a name for your file before saving.", type:"message"}, 
-                        {id:'fileNameInput', text:'File:', type:'text', value:"New File"}
+                    settings[2] = [{id:'existingFileInput', text:'Existing File:', type:'button', value:"Choose File", 
+                        onClickCallback:this._onOverwriteSaveCallback.bind(this)}
                     ];
-                    
-                    var buttons = 
-                    [
-                       {id:'nameButton', text:'Save', desc:'Save the file', onClickCallback:this._onSaveCallback.bind(this)}, 
-                       {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
-                    ];
-                    
-                    this._builder.openPopup("Name File", settings, buttons);
                 }
                 else
                 {
-                    this._onSaveCallback();
+                    settings[2] = [{id:'existingFileInput', text:'Save:', type:'button', value:this._filename, 
+                        onClickCallback:this._onOverwriteSaveCallback.bind(this)}
+                    ];
                 }
+                
+                var buttons = 
+                [
+                   {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
+                ];
+                
+                this._builder.openPopup("Save File", settings, buttons);
+            };
+            
+            this._onOverwriteSaveCallback = function(event)
+            {
+                return true;
             };
             
             this._onSaveCallback = function(event)
@@ -227,7 +239,7 @@ if(this.Graphite == null)
             
             gapi.client.setApiKey(this._developerKey);
             
-            // if immediate doesn't succeed in a bit, we need a non-immediate attempt
+            // after a bit, we should refresh authorization with immediate passed in
             window.setTimeout(this._checkAuthorization.bind(this, true), 10);
             
             gapi.load('picker', {'callback': this._pickerLoaded.bind(this)});

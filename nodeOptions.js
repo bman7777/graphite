@@ -213,12 +213,12 @@ if(this.Graphite == null)
                         
                         settingsImage.on('click', function(event)
                         {
-                            var settings = 
-                            [
-                                {id:'nameInput', text:'Name:', type:'text', value:node.text()}, 
-                                {id:'colorInput', text:'Color:', type:'color', value:node.fill()},
-                                {id:'fileInput', text:'File:', type:'file'}
-                            ];
+                            var settings = new Array();
+                            settings[0] = [{id:'nameInput', text:'Name:', type:'text', value:node.text()}]; 
+                            settings[1] = [{id:'colorInput', text:'Color:', type:'color', value:node.fill()}];
+                            
+                            // todo!
+                            settings[2] = [{id:'fileInput', text:'File:', type:'file'}];
                             
                             var buttons = 
                             [
@@ -226,6 +226,7 @@ if(this.Graphite == null)
                                {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
                             ];
                             
+                            debugger;
                             properties.settingsProps.action("Settings", settings, buttons);
                         });
                         

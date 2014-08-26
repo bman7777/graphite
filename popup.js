@@ -8,47 +8,83 @@ if(this.Graphite == null)
     // -- MENU definition
     function()
     {
-        Graphite.Popup = function(mountId)
+        Graphite.Popup = function(mountId, scrimMountId)
         {
             if(mountId != null)
             {
                 this._container = document.getElementById(mountId);
+                this._container.style.visibility = "hidden";
+                
+                this._scrimContainer = document.getElementById(scrimMountId);
+                this._scrimContainer.style.visibility = "hidden";
+                
                 this._rootId = "popupRoot";
                 this._container.innerHTML = "<table id=\""+this._rootId+"\"></table>";
             }
             
             this.open = function(title, settings, buttons)
             {
-                var popupData = "<tr><td class=\"popupHeader\" colspan=\"3\"><p style=\"margin-left: 15px\">"+title+"</p></td></tr>";
+                var rowButtons = new Array();
+                var popupData = "<tr><td class=\"popupHeader\"><p style=\"margin-left: 15px\">"+title+"</p></td></tr>";
                 for(var i = 0; i < settings.length; i++)
                 {
-                    popupData +=    "<tr><td class=\"popupRow\" colspan=\"3\">";
-                    popupData +=        "<p class=\"popupLabel\">"+settings[i].text;
-                    if(settings[i].type != "message")
+                    popupData += "<tr class=\"popupRow\"><td>";
+                    
+                    for(var j = 0; j < settings[i].length; j++)
                     {
-                        if(settings[i].attribute == undefined)
+                        var settingObj = settings[i][j];
+                        if(settingObj != undefined)
                         {
-                            settings[i].attribute = ""; 
+                            var useParagraph = settingObj.text != undefined ? true : false;
+                            if(useParagraph)
+                            {
+                                popupData += "<p class=\"popupLabel\">"+settingObj.text;
+                            }
+                            
+                            if(settingObj.type != "message")
+                            {
+                                if(settingObj.attribute == undefined)
+                                {
+                                    settingObj.attribute = ""; 
+                                }
+                                popupData += "<input id=\""+settingObj.id+"\" class=\"popupInput\" type=\""+
+                                    settingObj.type+"\" "+settingObj.attribute+" value=\""+
+                                    settingObj.value+"\"/>";
+                            }
+                            
+                            if(settingObj.type == 'button')
+                            {
+                                rowButtons.push(settingObj);
+                            }
+                            
+                            if(useParagraph)
+                            {
+                                popupData += "</p>";
+                            }
                         }
-                        popupData +=        "<input id=\""+settings[i].id+"\" class=\"popupInput\" type=\""+settings[i].type+"\" "+settings[i].attribute+"value=\""+settings[i].value+"\"/>";
-                    }
-                    popupData +=        "</p>";
-                    popupData +=    "</td></tr>";
+                    }	
+                        
+                    popupData += "</td></tr>";
                 }
 
-                popupData +=    "<tr class=\"popupFooter\">";
-                popupData +=        "<td class=\"popupFooterSpacer\"></td>";
+                popupData += "<tr class=\"popupFooter\"><td><div style=\"float: right;\">";
                 
                 for(var i = 0; i < buttons.length; i++)
                 {
-                    popupData +=    "<td id=\""+buttons[i].id+"\"><a href=\"#\" title=\""+buttons[i].desc+"\">";
-                    popupData +=        "<div class=\"popupButton\">"+buttons[i].text+"</div></a>";
-                    popupData +=    "</td>";
+                    popupData +=    "<a href=\"#\" title=\""+buttons[i].desc+"\">";
+                    popupData +=        "<div id=\""+buttons[i].id+"\" class=\"popupButton\">"+buttons[i].text+"</div>";
+                    popupData +=    "</a>";
                 }
                 
-                popupData += "</tr>";
+                popupData += "</div></td></tr>";
                 
                 document.getElementById(this._rootId).innerHTML = popupData;
+                
+                for(var i = 0; i < rowButtons.length; i++)
+                {
+                    var button = document.getElementById(rowButtons[i].id);
+                    button.onclick = this._onClickButton.bind(this, rowButtons[i].onClickCallback);
+                }
                 
                 for(var i = 0; i < buttons.length; i++)
                 {
@@ -60,6 +96,7 @@ if(this.Graphite == null)
                 
                 // show the popup
                 this._container.style.visibility = "visible";
+                this._scrimContainer.style.visibility = "visible";
             };
             
             this._onClickButton = function(callback, event)
@@ -79,18 +116,21 @@ if(this.Graphite == null)
                 
                 // hide everything
                 this._container.style.visibility = "hidden";
+                this._scrimContainer.style.visibility = "hidden";
             };
             
             this.onHighlightButton = function(event)
             {
                 var target = event.target || event.srcElement;
                 target.style.borderColor = "#257675";
+                target.style.cursor = "pointer";
             };
             
             this.onUnHighlightButton = function(event)
             {
                 var target = event.target || event.srcElement;
                 target.style.borderColor = "transparent";
+                target.style.cursor = "default";
             };
         };
     }

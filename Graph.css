@@ -108,6 +108,16 @@ div.subMenuIconHighlight
     background-color: #ffffff; 
     box-shadow: 5px 5px 5px #888888;
 }
+#popupScrim
+{
+	position: fixed; 
+	width: 100%;
+	height: 100%;
+	top: 0px;
+	left: 0px;
+	background-color: #ffffff;
+	opacity: 0.5;
+}
 #popupRoot
 {
     width: 100%;
@@ -124,6 +134,8 @@ p.popupLabel
     font-family: 'Arial';
     font-size: 12px;
     margin-left: 17px;
+    margin-right: 17px;
+    display: inline-block;
 }
 input.popupInput
 {
@@ -131,19 +143,18 @@ input.popupInput
     font-size: 12px;
     margin-left: 17px;
 }
-td.popupRow
+tr.popupRow
 {
-    height: 45px;
     border-bottom: 1px solid #7b7878;
+    padding-top: 7px;
+    padding-bottom: 7px;
 }
 tr.popupFooter
 {
     background-color: #e1e0e0;
     border-width: 0px;
-}
-td.popupFooterSpacer
-{
-    width: 150px;
+    padding-bottom: 5px;
+    align: right;
 }
 div.popupButton
 {
@@ -163,4 +174,8 @@ div.popupButton
     color: #ffffff;
     text-align:center;
     padding-top: 5px;
+    padding-bottom: 2px;
+    padding-left: 15px;
+    padding-right: 15px;
+    display: inline-block;
 }
