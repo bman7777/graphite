@@ -130,7 +130,7 @@ if(this.Graphite == null)
             
             this.openContent = function(node)
             {
-                window.location.href = "CodeEditor/code-editor.html?name=test.xml&parent=test.json";
+                this._fileOptions.openFile(node.link());
             };
             
             this.removeNode = function(node)
@@ -195,7 +195,7 @@ if(this.Graphite == null)
                 }
             };
             
-            this.processFile = function(type)
+            this.processFile = function(type, param)
             {
                 switch(type)
                 {
@@ -208,7 +208,7 @@ if(this.Graphite == null)
                         break;
                         
                     case Graphite.FileOptions.LOAD:
-                        this._fileOptions.load();
+                        this._fileOptions.load(param);
                         break;
                 }
             };

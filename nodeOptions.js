@@ -217,8 +217,22 @@ if(this.Graphite == null)
                             settings[0] = [{id:'nameInput', text:'Name:', type:'text', value:node.text()}]; 
                             settings[1] = [{id:'colorInput', text:'Color:', type:'color', value:node.fill()}];
                             
-                            // todo!
-                            settings[2] = [{id:'fileInput', text:'File:', type:'file'}];
+                            var label = node.linkName();
+                            if(label == undefined || label == "")
+                            {
+                                label = "Choose File";
+                            }
+                            
+                            settings[2] = [{id:'existingFileInput', text:'File:', type:'button', value:label, 
+                                onClickCallback: properties.pickLink.action.bind(this, function(data)
+                                {
+                                    if (data.action == google.picker.Action.PICKED)
+                                    {
+                                        node.linkName(data.docs[0].name);
+                                        node.link(data.docs[0].id);
+                                    }
+                                })}
+                            ];
                             
                             var buttons = 
                             [
@@ -226,7 +240,6 @@ if(this.Graphite == null)
                                {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
                             ];
                             
-                            debugger;
                             properties.settingsProps.action("Settings", settings, buttons);
                         });
                         

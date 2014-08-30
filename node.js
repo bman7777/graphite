@@ -19,6 +19,9 @@ if(this.Graphite == null)
             properties.id = 'group'+Graphite._UNIQUE_NODE_ID;
             properties.draggable = true;
             
+            this._link = "";
+            this._linkName = "";
+            
             Kinetic.Group.call(this, properties);
             
             // $HACK Start$ Kinetic bug that doesn't cache properly
@@ -165,6 +168,30 @@ if(this.Graphite == null)
             this.fill = function(color)
             {
                 return this._shape.unHighlightColor(color);
+            };
+            
+            this.link = function(link)
+            {
+                if(link == undefined)
+                {
+                    return this._link;
+                }
+                else
+                {
+                    this._link = link;
+                }
+            };
+            
+            this.linkName = function(name)
+            {
+                if(name == undefined)
+                {
+                    return this._linkName;
+                }
+                else
+                {
+                    this._linkName = name;
+                }
             };
             
             this.isHighlighted = function()

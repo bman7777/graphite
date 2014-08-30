@@ -146,10 +146,11 @@ if(this.Graphite == null)
             
             this.createOptions = function(type)
             {
-                var optionProps = { deleteProps:{}, contentProps:{}, settingsProps:{}};
+                var optionProps = { deleteProps:{}, contentProps:{}, settingsProps:{}, pickLink:{}};
                 optionProps.deleteProps.action =  function(node) { builder.removeNode(node); };
                 optionProps.settingsProps.action =  function(title, settings, buttons) { builder.openPopup(title, settings, buttons); };
                 optionProps.contentProps.action =  function(node) { builder.openContent(node); };
+                optionProps.pickLink.action = function(callback) { builder.processFile(Graphite.FileOptions.LOAD, callback); };
                 
                 switch(type)
                 {

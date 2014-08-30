@@ -120,14 +120,14 @@ if(this.Graphite == null)
                 var settings = new Array();
                 settings[0] = [{id:'msgInput', text:"Pick a name for your file before saving.", type:"message"}];
                 settings[1] = [
-                    {id:'fileNameInput', text:'New File:', type:'text', value:"New File"},
+                    {id:'fileNameInput', text:'Save As:', type:'text', value:"New File"},
                     {id:'nameButton', value:'Save', type:'button', desc:'Save the file', 
                          onClickCallback:this._onSaveCallback.bind(this)}
                 ];
             
                 if(!this._isFileNameValid(this._filename))
                 {
-                    settings[2] = [{id:'existingFileInput', text:'Existing File:', type:'button', value:"Choose File", 
+                    settings[2] = [{id:'existingFileInput', text:'Save:', type:'button', value:"Choose File", 
                         onClickCallback:this._onOverwriteSaveCallback.bind(this)}
                     ];
                 }
@@ -179,7 +179,7 @@ if(this.Graphite == null)
                         },
                         'body': requestBody
                     });
-                    request.execute(function(file) { console.log("my file is:"+file.webContentLink+" id:"+file.id); });
+                    request.execute(this._onSaveSuccess.bind(this));
                     
                     // todo write nodes/lines to a json/xml file
                     
@@ -192,18 +192,14 @@ if(this.Graphite == null)
                 }
             };
             
-            this._onFilePicked = function(data)
+            this._onSaveSuccess = function(event)
             {
-                if (data.action == google.picker.Action.PICKED)
-                {
-                    var fileId = data.docs[0].id;
-                    alert('The user selected: ' + fileId);
-                    
-                    // todo: load from json/xml
-                }
+                // todo: error handling?
+                
+                this._link = event.downloadUrl;
             };
             
-            this._createPicker = function()
+            this._createPicker = function(callback)
             {
                 this._isPickerLoaded = true;
                 
@@ -214,21 +210,65 @@ if(this.Graphite == null)
                     .setOAuthToken(this._authToken)
                     .addView(view)
                     .setDeveloperKey(this._developerKey)
-                    .setCallback(this._onFilePicked.bind(this))
+                    .setCallback(callback)
                     .build();
                  picker.setVisible(true);
             };
             
-            this.load = function()
+            this.openFile = function(link)
             {
-                this._checkAuthorization(this._isAuthorized, this._onLoadAuthorizationReady.bind(this));
+                if(link != undefined && link != "")
+                {
+                    this._checkAuthorization(this._isAuthorized, this._onOpenFileAuthorizationReady.bind(this, link));
+                }
             };
             
-            this._onLoadAuthorizationReady = function()
+            this._onOpenFileAuthorizationReady = function(link)
+            {
+                var request = gapi.client.request(
+                {
+                    'path': '/drive/v2/files/'+link,
+                    'method': 'GET'
+                });
+                request.execute(function(resp) 
+                {
+                    console.log('url: ' + resp.downloadUrl);
+                    window.location.href = "CodeEditor/code-editor.html?"+
+                        "link="+encodeURIComponent(resp.downloadUrl)+"&parentLink="+encodeURIComponent(this._link);
+                });
+            };
+            
+            this.load = function(callback)
+            {
+                if(callback == undefined)
+                {
+                    callback = this._onLoadPickedFile.bind(this);
+                }
+                
+                this._checkAuthorization(this._isAuthorized, this._onLoadAuthorizationReady.bind(this, callback));
+            };
+            
+            this._onLoadAuthorizationReady = function(callback)
             {
                 if(this._isPickerLoaded)
                 {
-                    this._createPicker();
+                    this._createPicker(callback);
+                }
+            };
+            
+            this._onLoadPickedFile = function(data)
+            {
+                if (data.action == google.picker.Action.PICKED)
+                {
+                    // clear what we have now to start from scratch
+                    this._builder.clear();
+                    
+                    var fileId = data.docs[0].id;
+                    alert('The user selected: ' + fileId);
+                    
+                    debugger;
+                    
+                    // todo: load from json/xml
                 }
             };
             
