@@ -16,11 +16,11 @@ if(this.Graphite == null)
                 properties = {};
             }
             
-            properties.id = 'group'+Graphite._UNIQUE_NODE_ID;
+            properties.id = properties.id == undefined ? 'group'+Graphite._UNIQUE_NODE_ID : properties.id;
             properties.draggable = true;
             
-            this._link = "";
-            this._linkName = "";
+            this._link = properties.link == undefined ? "" : properties.link;
+            this._linkName = properties.linkName == undefined ? "" : properties.linkName;
             
             Kinetic.Group.call(this, properties);
             
@@ -40,6 +40,11 @@ if(this.Graphite == null)
             this.add(this._shape);
             this.add(this._optionDisplay.getOverlay());
             
+            if(properties.text == undefined)
+            {
+                properties.text = 'Shape '+Graphite._UNIQUE_NODE_ID;
+            }
+            
             var TEXT_SIZE_FACTOR = 1.2;
             this._shapeText = new Kinetic.Text(
             {
@@ -47,7 +52,7 @@ if(this.Graphite == null)
                 y: -5,
                 width: this._shape.getRadius() * TEXT_SIZE_FACTOR,
                 align: 'center',
-                text: 'Shape '+Graphite._UNIQUE_NODE_ID,
+                text: properties.text,
                 fontSize: 12,
                 fill: 'black',
                 fontFamily:'Permanent Marker'
@@ -202,6 +207,24 @@ if(this.Graphite == null)
             this.getOptions = function()
             {
                 return this._optionDisplay;
+            };
+            
+            this.toXML = function()
+            {
+                var serialize = "<node>";
+                
+                serialize += this._shape.toXML();
+                serialize += "<container>";
+                serialize += "<id>"+this.id()+"</id>";
+                serialize += "<x>"+this.x()+"</x>";
+                serialize += "<y>"+this.y()+"</y>";
+                serialize += "<text>"+this._shapeText.text()+"</text>";
+                serialize += "<link>"+this._link+"</link>";
+                serialize += "<linkName>"+this._linkName+"</linkName>";
+                serialize += "</container>";
+                
+                serialize += "</node>";
+                return serialize;
             };
             
             this.cache = function(config)

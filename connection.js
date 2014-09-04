@@ -21,9 +21,17 @@ if(this.Graphite == null)
             this._type = properties.type;
             this._startGroup = properties.start;
             
-            // for now, it starts and stops in same pixel- until an end is explicitly set
-            this._endGroup = properties.start;
-            properties.points = [properties.start.x(), properties.start.y(), properties.start.x(), properties.start.y()];
+            if(properties.end == undefined)
+            {
+                // for now, it starts and stops in same pixel- until an end is explicitly set
+                this._endGroup = properties.start;
+            }
+            else
+            {
+                this._endGroup = properties.end;
+            }
+            
+            properties.points = [this._startGroup.x(), this._startGroup.y(), this._endGroup.x(), this._endGroup.y()];
             
             this._getStrokeWidthForType = function(isHighlighted)
             {
@@ -84,7 +92,7 @@ if(this.Graphite == null)
                 shadowColor: '#333333',
                 shadowOffset: {x:2, y:2},
                 shadowOpacity: 0.8,
-                opacity: 0
+                opacity: properties.startArrowVisible ? 1 : 0
             });
             this.add(this._startArrow);
             
@@ -96,7 +104,7 @@ if(this.Graphite == null)
                 shadowColor: '#333333',
                 shadowOffset: {x:2, y:2},
                 shadowOpacity: 0.8,
-                opacity: 0
+                opacity: properties.endArrowVisible ? 1 : 0
             });
             this.add(this._endArrow);
             
@@ -192,6 +200,20 @@ if(this.Graphite == null)
                 }
                 
                 return this._isHighlighted;
+            };
+            
+            this.toXML = function()
+            {
+                var serialize = "<connection>";
+                
+                serialize += "<type>"+this._type+"</type>";
+                serialize += "<startGroupId>"+this._startGroup.id()+"</startGroupId>";
+                serialize += "<endGroupId>"+this._endGroup.id()+"</endGroupId>";
+                serialize += "<startArrowVisible>" + (this._startArrow.opacity() > 0 ? true : false) + "</startArrowVisible>";
+                serialize += "<endArrowVisible>" + (this._endArrow.opacity() > 0 ? true : false) + "</endArrowVisible>";
+                
+                serialize += "</connection>";
+                return serialize;
             };
             
             this.setEndGroup = function(end)

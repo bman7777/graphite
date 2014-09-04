@@ -25,7 +25,7 @@ if(this.Graphite == null)
             {
                 var shapeProps = 
                 {
-                    fill: Graphite.ShapeFactory.DEFAULT_FILL_COLOR,
+                    fill: this._unHighlightColor,
                     stroke: 'black',
                     strokeWidth: 3,
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
@@ -42,7 +42,7 @@ if(this.Graphite == null)
             {
                 var shapeProps = 
                 {
-                    fill: Graphite.ShapeFactory.DEFAULT_FILL_COLOR,
+                    fill: this._unHighlightColor,
                     stroke: 'black',
                     strokeWidth: 3,
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
@@ -60,7 +60,7 @@ if(this.Graphite == null)
             {
                 var shapeProps = 
                 {
-                    fill: Graphite.ShapeFactory.DEFAULT_FILL_COLOR,
+                    fill: this._unHighlightColor,
                     stroke: 'black',
                     strokeWidth: 3,
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
@@ -75,10 +75,12 @@ if(this.Graphite == null)
                 return new Kinetic.RegularPolygon(shapeProps);
             };
             
-            this.createShape = function(type)
+            this.createShape = function(properties)
             {
                 var shape;
-                switch(type)
+                this._unHighlightColor = properties.unHighlightColor == undefined ? Graphite.ShapeFactory.DEFAULT_FILL_COLOR : properties.unHighlightColor;
+                
+                switch(properties.type)
                 {
                     case Graphite.ShapeFactory.TRIANGLE:
                         shape = this._createTriangle();
@@ -92,8 +94,6 @@ if(this.Graphite == null)
                         shape = this._createCircle();
                         break;
                 }
-                
-                this._unHighlightColor = Graphite.ShapeFactory.DEFAULT_FILL_COLOR;
                 
                 shape.unHighlightColor = function(color)
                 {
@@ -139,6 +139,17 @@ if(this.Graphite == null)
                     }
                     
                     return this._isHighlighted;
+                };
+                
+                shape.toXML = function()
+                {
+                    var serialize = "<shape>";
+                    
+                    serialize += "<unHighlightColor>"+this._unHighlightColor+"</unHighlightColor>";
+                    serialize += "<type>"+properties.type+"</type>";
+                    
+                    serialize += "</shape>";
+                    return serialize;
                 };
                 
                 return shape;

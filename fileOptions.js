@@ -3,7 +3,7 @@ if(this.Graphite == null)
 {
     this.Graphite = {};
 }
-	
+
 (
     // -- FILE-OPTIONS definition
     function()
@@ -11,8 +11,6 @@ if(this.Graphite == null)
         Graphite.FileOptions = function(builder)
         {
             this._builder = builder;
-            this._clientID = '124896665631-ckqdiegiiv8h2hpc7vf8sogp0fgepg2q.apps.googleusercontent.com';
-            this._developerKey = 'AIzaSyCrw7J_hoDt1kiB6AAmN8FyWjyEnOLHRWA';
             
             this._checkAuthorization = function(immediate, callback) 
             {
@@ -22,19 +20,25 @@ if(this.Graphite == null)
                     this._isAuthorized = false;
                     this._authToken = undefined;
                     
-                    gapi.auth.authorize(
+                    var authReq = new XMLHttpRequest();
+                    authReq.open("GET", "api/authorize", false);
+                    authReq.onload = function()
                     {
-                        'client_id': this._clientID, 
-                        'scope': 'https://www.googleapis.com/auth/drive', 
-                        'immediate': (immediate == true)
-                    }, this._handleAuthorizationResult.bind(this, callback));
+                        var googleAuth = JSON.parse(authReq.responseText);
+                        googleAuth.scope = 'https://www.googleapis.com/auth/drive';
+                        googleAuth.immediate = (immediate == true);
+                        
+                        gapi.auth.authorize(googleAuth, 
+                            this._handleAuthorizationResult.bind(this, callback));
+                    }.bind(this);
+                    authReq.send(null);
                 }
                 else
                 {
                     if(callback) callback();
                 }
             };
-        
+            
             this._handleAuthorizationResult = function(callback, authResult)
             {
                 if(authResult && !authResult.error)
@@ -155,6 +159,8 @@ if(this.Graphite == null)
             {
                 if(this._isFileNameValid(this._filename) || this._onSelectFileName(event))
                 {
+                    var doc = this._builder.toXML();
+                    
                     const boundary = "gapi.client.request-Multipart-Boundary";
                     const requestBody = 
                         "--"+boundary+"\n"+
@@ -164,7 +170,7 @@ if(this.Graphite == null)
                             "}\n"+
                          "\n--"+boundary+"\n"+
                          "Content-Type: text/xml\n\n"+
-                         "<text>hello world!!!! 123!!!!</text>\n"+
+                         doc+"\n"+
                          "\n--"+boundary+"--";
                         
                     var request = gapi.client.request(
@@ -181,9 +187,7 @@ if(this.Graphite == null)
                     });
                     request.execute(this._onSaveSuccess.bind(this));
                     
-                    // todo write nodes/lines to a json/xml file
-                    
-                    // todo: message somewhere that the save succeeded
+                    // todo: message somewhere that the save succeeded, and filename and stuff
                     return true;
                 }
                 else
@@ -209,7 +213,6 @@ if(this.Graphite == null)
                 var picker = new google.picker.PickerBuilder()
                     .setOAuthToken(this._authToken)
                     .addView(view)
-                    .setDeveloperKey(this._developerKey)
                     .setCallback(callback)
                     .build();
                  picker.setVisible(true);
@@ -232,7 +235,6 @@ if(this.Graphite == null)
                 });
                 request.execute(function(resp) 
                 {
-                    console.log('url: ' + resp.downloadUrl);
                     window.location.href = "CodeEditor/code-editor.html?"+
                         "link="+encodeURIComponent(resp.downloadUrl)+"&parentLink="+encodeURIComponent(this._link);
                 });
@@ -250,7 +252,7 @@ if(this.Graphite == null)
             
             this._onLoadAuthorizationReady = function(callback)
             {
-                if(this._isPickerLoaded)
+                //if(this._isPickerLoaded)
                 {
                     this._createPicker(callback);
                 }
@@ -260,15 +262,28 @@ if(this.Graphite == null)
             {
                 if (data.action == google.picker.Action.PICKED)
                 {
-                    // clear what we have now to start from scratch
-                    this._builder.clear();
-                    
-                    var fileId = data.docs[0].id;
-                    alert('The user selected: ' + fileId);
-                    
-                    debugger;
-                    
-                    // todo: load from json/xml
+                    var request = gapi.client.drive.files.get(
+                    {
+                        'fileId': data.docs[0].id
+                    });
+                    request.execute(function(resp) 
+                    {
+                        // todo: ensure this is a graphite file!
+                        
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('GET', decodeURIComponent(resp.downloadUrl));
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
+                        xhr.onload = function(param) 
+                        {
+                            this._filename = resp.title;
+                            
+                            var parser=new DOMParser();
+                            var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
+                            
+                            this._builder.fromXML(xmlDoc);
+                        }.bind(this);
+                        xhr.send();
+                    }.bind(this));
                 }
             };
             
@@ -277,12 +292,8 @@ if(this.Graphite == null)
                 this._isPickerLoaded = true;
             };
             
-            gapi.client.setApiKey(this._developerKey);
-            
             // after a bit, we should refresh authorization with immediate passed in
             window.setTimeout(this._checkAuthorization.bind(this, true), 10);
-            
-            gapi.load('picker', {'callback': this._pickerLoaded.bind(this)});
         };
         
         Graphite.FileOptions.NEW = 0;

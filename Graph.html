@@ -3,10 +3,8 @@
 <head>
     <title>Graphite</title>
     <link rel="SHORTCUT ICON" href="http://www.local-binary.com/root/img/web/localbinaryicon.ico" />
-	<link rel="stylesheet" type="text/css" href="Graph.css">
-	
-	<script src="https://apis.google.com/js/client.js"></script>
-	<script src="https://apis.google.com/js/api.js"></script>
+    <link rel="stylesheet" type="text/css" href="Graph.css">
+    
     <script src="kinetic-v5.1.0.min.js"></script>
     <script src="mathutil.js"></script>
     <script src="builder.js"></script>
@@ -24,6 +22,21 @@
         var WINDOW_GUTTER = 25;
         var builder;
         var shapeSettings;
+        
+        function onClientLoad()
+        {
+            gapi.client.load('drive', 'v2', function() {});
+        }
+        
+        function onApiLoad()
+        {
+            gapi.load('auth', {callback: function() {});
+            gapi.load('picker', {callback: function() {} });
+            
+            var clientLib = document.createElement('script');
+            clientLib.setAttribute("src", "https://apis.google.com/js/client.js?onload=onClientLoad");
+            document.getElementsByTagName("head")[0].appendChild(clientLib);
+        }
         
         function initializeGraphite()
         {
@@ -72,7 +85,8 @@
             var s = document.getElementsByTagName('script')[0];
             s.parentNode.insertBefore(wf, s);
         })();
-	</script>
+    </script>
+    <script src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
     
 </head>
 <body style="background-image:url('img/web/graphtile-new.gif')"

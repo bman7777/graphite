@@ -233,7 +233,7 @@ if(this.Graphite == null)
                 }
                 
                 // keep track of this node until we finalize (place it)
-                var shape = this._nodeFactory.createShape(type);
+                var shape = this._nodeFactory.createShape({type: type});
                 var options = this._nodeFactory.createOptions(type);
                 this._pendingNode = new Graphite.Node(
                 {
@@ -486,6 +486,123 @@ if(this.Graphite == null)
                 
                 // redraw the deleted change(s)
                 this._connectionLayer.draw();  
+            };
+            
+            this.toXML = function()
+            {
+                var serialize = "<graph>";
+                
+                serialize += "<connections>";
+                var listChildren = this._connectionLayer.getChildren();
+                for(var i = listChildren.length - 1; i >= 0; i--)
+                {
+                    serialize += listChildren[i].toXML();
+                }
+                serialize += "</connections>";
+                
+                serialize += "<nodes>";
+                listChildren = this._nodeLayer.getChildren();
+                for(var i = listChildren.length - 1; i >= 0; i--)
+                {
+                    serialize += listChildren[i].toXML();
+                }
+                serialize += "</nodes>";
+                    
+                serialize += "</graph>";
+                
+                return serialize;
+            };
+            
+            this.fromXML = function(xmlDoc)
+            {
+                // clear what we have now to start from scratch
+                this.clear();
+                
+                var nodeRoot = xmlDoc.getElementsByTagName("nodes")[0];
+                var nodeList = nodeRoot.childNodes;
+                for(var i = 0; i < nodeList.length; i++)
+                {
+                    var details = this._createObjectFromXML(nodeList[i]);
+                    
+                    var nodeParams = details.container;
+                    nodeParams.getState = this.getState.bind(this);
+                    nodeParams.shape = this._nodeFactory.createShape(details.shape);
+                    nodeParams.options = this._nodeFactory.createOptions(details.shape.type);
+                    
+                    this._nodeLayer.add(new Graphite.Node(nodeParams));
+                }
+                this._nodeLayer.draw();
+                
+                var connectionRoot = xmlDoc.getElementsByTagName("connections")[0];
+                var connectionList = connectionRoot.childNodes;
+                for(var i = 0; i < connectionList.length; i++)
+                {
+                    var connectionParams = this._createObjectFromXML(connectionList[i]);
+                    
+                    connectionParams.getState = this.getState.bind(this);
+                    connectionParams.options = this._lineFactory.createOptions();
+                    connectionParams.start = this._getNodeById(connectionParams.startGroupId);
+                    connectionParams.end = this._getNodeById(connectionParams.endGroupId);
+                    
+                    var connection = new Graphite.Connection(connectionParams);
+                    this._connectionLayer.add(connection);
+                    
+                    connectionParams.start.addConnection(connection, connectionParams.end);
+                    connectionParams.end.addConnection(connection, connectionParams.start);
+                    connection.dragUpdate();
+                }
+                this._connectionLayer.draw();
+            };
+            
+            this._getNodeById = function(id)
+            {
+                var nodeList = this._nodeLayer.getChildren();
+                for(var i = 0; i < nodeList.length; i++)
+                {
+                    if(nodeList[i].id() == id)
+                    {
+                        return nodeList[i];
+                    }
+                }
+            };
+            
+            this._createObjectFromXML = function(xmlRoot)
+            {
+                var returnObj = {};
+                var childList = xmlRoot.childNodes;
+                for(var i = 0; i < childList.length; i++)
+                {
+                    if(childList[i].childNodes.length > 1)
+                    {
+                        returnObj[childList[i].nodeName] = this._createObjectFromXML(childList[i]);
+                    }
+                    else
+                    {
+                        var str = childList[i].textContent;
+                        if(str == "true")
+                        {
+                            returnObj[childList[i].nodeName] = true;
+                        }
+                        else if(str == "false")
+                        {
+                            returnObj[childList[i].nodeName] = false;
+                        }
+                        else
+                        {
+                            var num = Number(str);
+                            if(isNaN(num))
+                            {
+                                returnObj[childList[i].nodeName] = str;
+                            }
+                            else
+                            {
+                                returnObj[childList[i].nodeName] = num;
+                            }
+                        }
+                    }
+                }
+                
+                return returnObj;
             };
             
             this.clear = function()
