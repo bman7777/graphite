@@ -33,14 +33,15 @@ if(this.Graphite == null)
             this._nodeLayer = new Kinetic.Layer();
             stage.add(this._nodeLayer);
             
-            this._fileOptions = new Graphite.FileOptions(this);
+            this._messager = new Graphite.Messager(stageProps.messagerMount, this);
+            this._fileOptions = new Graphite.FileOptions(this, this._messager);
             
             // make a factory for nodes
             this._nodeFactory = new Graphite.ShapeFactory(this);
             
             // make a factory for lines
             this._lineFactory = new Graphite.LineFactory(this);
-
+            
             this._popup = stageProps.popup;
             
             // loop through children of the given layer and check isHighlighted

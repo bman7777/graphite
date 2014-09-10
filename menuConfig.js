@@ -19,7 +19,7 @@ if(this.GraphiteMenu == null)
             [{
                 title:"New",
                 iconImg:"img/web/new.gif",
-                desc:"New Graph",
+                desc:"New/Rename Graph",
                 type:Graphite.FileOptions.NEW,
                 category:Graphite.Builder.CATEGORY_FILE
             },

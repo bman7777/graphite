@@ -62,8 +62,8 @@ if(this.Graphite == null)
                                 popupData += "</p>";
                             }
                         }
-                    }	
-                        
+                    }
+                    
                     popupData += "</td></tr>";
                 }
 
@@ -122,13 +122,17 @@ if(this.Graphite == null)
             this.onHighlightButton = function(event)
             {
                 var target = event.target || event.srcElement;
-                target.style.borderColor = "#257675";
+                target.style.textShadow = "0px 1px 2px #333333";
+                target.style.backgroundColor = "#cceeee";
+                target.style.borderColor = "#9d9e9e";
                 target.style.cursor = "pointer";
             };
             
             this.onUnHighlightButton = function(event)
             {
                 var target = event.target || event.srcElement;
+                target.style.textShadow = "none";
+                target.style.backgroundColor = "#559dc9";
                 target.style.borderColor = "transparent";
                 target.style.cursor = "default";
             };

@@ -18,6 +18,7 @@
     <script src="fileOptions.js"></script>
     <script src="menuConfig.js"></script>
     <script src="popup.js"></script>
+    <script src="messager.js"></script>
     <script>
         var WINDOW_GUTTER = 25;
         var builder;
@@ -30,7 +31,7 @@
         
         function onApiLoad()
         {
-            gapi.load('auth', {callback: function() {});
+            gapi.load('auth', {callback: function() {} });
             gapi.load('picker', {callback: function() {} });
             
             var clientLib = document.createElement('script');
@@ -45,7 +46,8 @@
                 container: 'container',
                 width: window.innerWidth-WINDOW_GUTTER,
                 height: window.innerHeight-WINDOW_GUTTER,
-                popup: new Graphite.Popup("popup", "popupScrim")
+                popup: new Graphite.Popup('popup', 'popupScrim'),
+                messagerMount: 'messager'
             });
         }
         
@@ -93,6 +95,7 @@
       oncontextmenu="return false;">
     
     <div id="container"></div>
+    <div id="messager" class="MessagerContainer"></div>
     
     <a href="http://www.local-binary.com">
         <div class="home" style="position: fixed; top: 15px;"></div>

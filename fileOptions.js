@@ -8,9 +8,13 @@ if(this.Graphite == null)
     // -- FILE-OPTIONS definition
     function()
     {
-        Graphite.FileOptions = function(builder)
+        Graphite.FileOptions = function(builder, messager)
         {
             this._builder = builder;
+            this._messager = messager;
+            
+            // todo: we may be loading a document that exists immediately
+            this._messager.setFileName("Untitled");
             
             this._checkAuthorization = function(immediate, callback) 
             {
@@ -59,23 +63,31 @@ if(this.Graphite == null)
             this.newFile = function()
             {
                 var settings = new Array();
-                settings[0] = [{id:'warningInput', text:"Creating a new file will wipe out all progress.  Are you sure?", type:"message"}]; 
-                settings[1] = [{id:'fileNameInput', text:'File:', type:'text', value:"New File"}];
+                var currFileNameIsValid = this._isFileNameValid(this._filename);
+                settings[0] = [{id:'fileNameInput', text:'File:', type:'text', 
+                    value:currFileNameIsValid ? this._filename + "(copy)" : "Untitled"}];
                 
-                var buttons = 
-                [
-                   {id:'newButton', text:'Create', desc:'Create a new file', onClickCallback:this._onNewFile.bind(this)}, 
-                   {id:'cancelButton', text:'Cancel', desc:"Don't create a new file"}
-                ];
+                var buttons = new Array();
+                if(currFileNameIsValid)
+                {
+                    buttons.push({id:'newButton', text:'Create New', desc:"Create a new file", onClickCallback:this._onNamedFile.bind(this, true)});
+                }
                 
-                this._builder.openPopup("New File", settings, buttons);
+                buttons.push({id:'nameButton', text:'Rename', desc:"Rename file", onClickCallback:this._onNamedFile.bind(this, false)});
+                buttons.push({id:'cancelButton', text:'Cancel', desc:"Don't create a new file"});
+                
+                this._builder.openPopup("Name File", settings, buttons);
             };
             
-            this._onNewFile = function(event)
+            this._onNamedFile = function(isNewFile, event)
             {
                 if(this._onSelectFileName(event))
                 {
-                    this._builder.clear();
+                    if(isNewFile)
+                    {
+                        this._builder.clear();
+                    }
+                    
                     return true;
                 }
                 else
@@ -96,8 +108,10 @@ if(this.Graphite == null)
                 {
                     // todo- if it ends in .xml we should cut that off since we append later
                     
-                    // if filename is valid, clear everything and use this as filename
+                    // this is a valid filename that we can work with
+                    this._currentFileId = undefined;
                     this._filename = fileName;
+                    this._messager.setFileName(this._filename);
                     return true;
                 }
             };
@@ -121,38 +135,24 @@ if(this.Graphite == null)
             
             this._onSaveAuthorizationReady = function()
             {
-                var settings = new Array();
-                settings[0] = [{id:'msgInput', text:"Pick a name for your file before saving.", type:"message"}];
-                settings[1] = [
-                    {id:'fileNameInput', text:'Save As:', type:'text', value:"New File"},
-                    {id:'nameButton', value:'Save', type:'button', desc:'Save the file', 
-                         onClickCallback:this._onSaveCallback.bind(this)}
-                ];
-            
                 if(!this._isFileNameValid(this._filename))
                 {
-                    settings[2] = [{id:'existingFileInput', text:'Save:', type:'button', value:"Choose File", 
-                        onClickCallback:this._onOverwriteSaveCallback.bind(this)}
+                    var settings = new Array();
+                    settings[0] = [{id:'msgInput', text:"Pick a name for your file before saving.", type:"message"}];
+                    settings[1] = [{id:'fileNameInput', text:'File:', type:'text', value:"Untitled"}];
+                    
+                    var buttons = 
+                    [
+                        {id:'saveButton', text:'Save', desc:"Save Changes", onClickCallback:this._onSaveCallback.bind(this)},
+                        {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
                     ];
+                    
+                    this._builder.openPopup("Save File", settings, buttons);
                 }
                 else
                 {
-                    settings[2] = [{id:'existingFileInput', text:'Save:', type:'button', value:this._filename, 
-                        onClickCallback:this._onOverwriteSaveCallback.bind(this)}
-                    ];
+                    this._onSaveCallback();
                 }
-                
-                var buttons = 
-                [
-                   {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
-                ];
-                
-                this._builder.openPopup("Save File", settings, buttons);
-            };
-            
-            this._onOverwriteSaveCallback = function(event)
-            {
-                return true;
             };
             
             this._onSaveCallback = function(event)
@@ -172,10 +172,16 @@ if(this.Graphite == null)
                          "Content-Type: text/xml\n\n"+
                          doc+"\n"+
                          "\n--"+boundary+"--";
-                        
+                    
+                    var requestPath = "/upload/drive/v2/files";
+                    if(this._currentFileId != undefined)
+                    {
+                        requestPath += "/"+this._currentFileId;
+                    }
+                    
                     var request = gapi.client.request(
                     {
-                        'path': '/upload/drive/v2/files',
+                        'path': requestPath,
                         'method': 'POST',
                         'params': {'uploadType': 'multipart'},
                         'headers': 
@@ -186,8 +192,6 @@ if(this.Graphite == null)
                         'body': requestBody
                     });
                     request.execute(this._onSaveSuccess.bind(this));
-                    
-                    // todo: message somewhere that the save succeeded, and filename and stuff
                     return true;
                 }
                 else
@@ -198,6 +202,8 @@ if(this.Graphite == null)
             
             this._onSaveSuccess = function(event)
             {
+                this._messager.showMessage("Save Succeeded");
+                
                 // todo: error handling?
                 
                 this._link = event.downloadUrl;
@@ -205,8 +211,6 @@ if(this.Graphite == null)
             
             this._createPicker = function(callback)
             {
-                this._isPickerLoaded = true;
-                
                 var view = new google.picker.View(google.picker.ViewId.DOCS);
                 view.setMimeTypes("text/xml");
                 
@@ -235,6 +239,8 @@ if(this.Graphite == null)
                 });
                 request.execute(function(resp) 
                 {
+                    // todo: if this is a graphite file, just reload inside the browser (after prompting save)
+                    
                     window.location.href = "CodeEditor/code-editor.html?"+
                         "link="+encodeURIComponent(resp.downloadUrl)+"&parentLink="+encodeURIComponent(this._link);
                 });
@@ -252,10 +258,7 @@ if(this.Graphite == null)
             
             this._onLoadAuthorizationReady = function(callback)
             {
-                //if(this._isPickerLoaded)
-                {
-                    this._createPicker(callback);
-                }
+                this._createPicker(callback);
             };
             
             this._onLoadPickedFile = function(data)
@@ -275,7 +278,9 @@ if(this.Graphite == null)
                         xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
                         xhr.onload = function(param) 
                         {
-                            this._filename = resp.title;
+                            this._currentFileId = data.docs[0].id;
+                            this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
+                            this._messager.setFileName(this._filename);
                             
                             var parser=new DOMParser();
                             var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
@@ -285,11 +290,6 @@ if(this.Graphite == null)
                         xhr.send();
                     }.bind(this));
                 }
-            };
-            
-            this._pickerLoaded = function()
-            {
-                this._isPickerLoaded = true;
             };
             
             // after a bit, we should refresh authorization with immediate passed in
