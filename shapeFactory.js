@@ -21,11 +21,11 @@ if(this.Graphite == null)
             };
             // $HACK end$
             
-            this._createCircle = function()
+            this._createCircle = function(color)
             {
                 var shapeProps = 
                 {
-                    fill: this._unHighlightColor,
+                    fill: color,
                     stroke: 'black',
                     strokeWidth: 3,
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
@@ -38,11 +38,11 @@ if(this.Graphite == null)
                 return new Kinetic.Circle(shapeProps);
             };
             
-            this._createTriangle = function()
+            this._createTriangle = function(color)
             {
                 var shapeProps = 
                 {
-                    fill: this._unHighlightColor,
+                    fill: color,
                     stroke: 'black',
                     strokeWidth: 3,
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
@@ -56,11 +56,11 @@ if(this.Graphite == null)
                 return new Kinetic.RegularPolygon(shapeProps);
             };
             
-            this._createSquare = function()
+            this._createSquare = function(color)
             {
                 var shapeProps = 
                 {
-                    fill: this._unHighlightColor,
+                    fill: color,
                     stroke: 'black',
                     strokeWidth: 3,
                     radius: Graphite.ShapeFactory.DEFAULT_RADIUS,
@@ -78,22 +78,26 @@ if(this.Graphite == null)
             this.createShape = function(properties)
             {
                 var shape;
-                this._unHighlightColor = properties.unHighlightColor == undefined ? Graphite.ShapeFactory.DEFAULT_FILL_COLOR : properties.unHighlightColor;
+                var unHighlightColor = properties.unHighlightColor == undefined ? 
+                        Graphite.ShapeFactory.DEFAULT_FILL_COLOR : properties.unHighlightColor;
                 
                 switch(properties.type)
                 {
                     case Graphite.ShapeFactory.TRIANGLE:
-                        shape = this._createTriangle();
+                        shape = this._createTriangle(unHighlightColor);
                         break;
 
                     case Graphite.ShapeFactory.SQUARE:
-                        shape = this._createSquare();
+                        shape = this._createSquare(unHighlightColor);
                         break;
 
                     default:
-                        shape = this._createCircle();
+                        shape = this._createCircle(unHighlightColor);
                         break;
                 }
+                
+                // store this as a shape member
+                shape._unHighlightColor = unHighlightColor;
                 
                 shape.unHighlightColor = function(color)
                 {

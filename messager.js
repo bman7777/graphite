@@ -39,7 +39,7 @@ if(this.Graphite == null)
                 this._container.innerHTML = msgBar;
             }
             
-            this.setFileName = function(name, hasParent)
+            this.setFileName = function(name)
             {
                 if(name.length > 20)
                 {
@@ -47,12 +47,26 @@ if(this.Graphite == null)
                     name += "...";
                 }
                 document.getElementById(this._filenameMount).innerHTML = name != undefined ? name : "";
-                document.getElementById(this._backMount).style.visibility = hasParent == true ? "visible" : "hidden";
             };
             
             this._changeFileName = function()
             {
                 this._builder.processFile(Graphite.FileOptions.NEW);
+            };
+            
+            this.refreshGoBack = function(show, callback)
+            {
+                var goBack = document.getElementById(this._backMount);
+                if(show)
+                {
+                    goBack.style.visibility = "visible";
+                    this._goBackCallback = callback;
+                }
+                else
+                {
+                    goBack.style.visibility = "hidden";
+                    this._goBackCallback = undefined;
+                }
             };
             
             this.showMessage = function(message)
@@ -100,7 +114,10 @@ if(this.Graphite == null)
             
             this._goBack = function()
             {
-                // todo
+                if(this._goBackCallback != undefined)
+                {
+                    this._goBackCallback();
+                }
             };
             
             this._onHighlightItem = function(event)

@@ -516,6 +516,11 @@ if(this.Graphite == null)
             
             this.fromXML = function(xmlDoc)
             {
+                if(xmlDoc.firstChild.nodeName != "graph")
+                {
+                    return false;
+                }
+                
                 // clear what we have now to start from scratch
                 this.clear();
                 
@@ -553,6 +558,8 @@ if(this.Graphite == null)
                     connection.dragUpdate();
                 }
                 this._connectionLayer.draw();
+                
+                return true;
             };
             
             this._getNodeById = function(id)

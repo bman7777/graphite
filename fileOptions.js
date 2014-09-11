@@ -12,6 +12,7 @@ if(this.Graphite == null)
         {
             this._builder = builder;
             this._messager = messager;
+            this._fileStackCookieDelim = "--stack--";
             
             // todo: we may be loading a document that exists immediately
             this._messager.setFileName("Untitled");
@@ -83,6 +84,7 @@ if(this.Graphite == null)
             {
                 if(this._onSelectFileName(event))
                 {
+                    this._lastSavedFileContent = undefined;
                     if(isNewFile)
                     {
                         this._builder.clear();
@@ -106,11 +108,20 @@ if(this.Graphite == null)
                 }
                 else
                 {
-                    // todo- if it ends in .xml we should cut that off since we append later
-                    
                     // this is a valid filename that we can work with
                     this._currentFileId = undefined;
-                    this._filename = fileName;
+                    this._resetFileStack();
+                    
+                    var suffixIdx = fileName.lastIndexOf(".xml");
+                    if(suffixIdx > 0)
+                    {
+                        this._filename = fileName.substring(0, suffixIdx);
+                    }
+                    else
+                    {
+                        this._filename = fileName;
+                    }
+                    this._messager.refreshGoBack(false);
                     this._messager.setFileName(this._filename);
                     return true;
                 }
@@ -118,7 +129,7 @@ if(this.Graphite == null)
             
             this._isFileNameValid = function(fileName)
             {
-                if(fileName == "" || fileName == undefined || fileName == null)
+                if(fileName == "" || fileName == undefined || fileName == null || fileName.indexOf(".xml") == 0)
                 {
                     return false;
                 }
@@ -143,7 +154,7 @@ if(this.Graphite == null)
                     
                     var buttons = 
                     [
-                        {id:'saveButton', text:'Save', desc:"Save Changes", onClickCallback:this._onSaveCallback.bind(this)},
+                        {id:'saveButton', text:'Save', desc:"Save Changes", onClickCallback:this._onSaveCallback.bind(this, null)},
                         {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
                     ];
                     
@@ -151,11 +162,11 @@ if(this.Graphite == null)
                 }
                 else
                 {
-                    this._onSaveCallback();
+                    this._onSaveCallback(null);
                 }
             };
             
-            this._onSaveCallback = function(event)
+            this._onSaveCallback = function(callback, event)
             {
                 if(this._isFileNameValid(this._filename) || this._onSelectFileName(event))
                 {
@@ -174,15 +185,17 @@ if(this.Graphite == null)
                          "\n--"+boundary+"--";
                     
                     var requestPath = "/upload/drive/v2/files";
+                    var requestMethod = "POST";
                     if(this._currentFileId != undefined)
                     {
                         requestPath += "/"+this._currentFileId;
+                        requestMethod = "PUT";
                     }
                     
                     var request = gapi.client.request(
                     {
                         'path': requestPath,
-                        'method': 'POST',
+                        'method': requestMethod,
                         'params': {'uploadType': 'multipart'},
                         'headers': 
                         {
@@ -191,7 +204,9 @@ if(this.Graphite == null)
                         },
                         'body': requestBody
                     });
-                    request.execute(this._onSaveSuccess.bind(this));
+                    
+                    this._lastSavedFileContent = doc;
+                    request.execute(this._onSaveSuccess.bind(this, callback));
                     return true;
                 }
                 else
@@ -200,13 +215,19 @@ if(this.Graphite == null)
                 }
             };
             
-            this._onSaveSuccess = function(event)
+            this._onSaveSuccess = function(callback, event)
             {
                 this._messager.showMessage("Save Succeeded");
                 
                 // todo: error handling?
                 
                 this._link = event.downloadUrl;
+                
+                // do whatever comes next if we can
+                if(callback != null)
+                {
+                    callback();
+                }
             };
             
             this._createPicker = function(callback)
@@ -226,8 +247,35 @@ if(this.Graphite == null)
             {
                 if(link != undefined && link != "")
                 {
-                    this._checkAuthorization(this._isAuthorized, this._onOpenFileAuthorizationReady.bind(this, link));
+                    if(this.isDirty())
+                    {
+                        var settings = new Array();
+                        settings[0] = [{id:'msgInput', text:"Save changes before continuing?", type:"message"}];
+                        
+                        if(!this._isFileNameValid(this._filename))
+                        {
+                            settings[1] = [{id:'fileNameInput', text:'File:', type:'text', value:"Untitled"}];
+                        }
+                        
+                        var buttons = 
+                        [
+                            {id:'saveButton', text:'Save', desc:"Save Changes", 
+                                onClickCallback:this._onSaveCallback.bind(this, this._onOpenFileCheckAuthorization.bind(this, link))},
+                            {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
+                        ];
+                        
+                        this._builder.openPopup("Save File", settings, buttons);
+                    }
+                    else
+                    {
+                        this._onOpenFileCheckAuthorization(link);
+                    }
                 }
+            };
+            
+            this._onOpenFileCheckAuthorization = function(link)
+            {
+                this._checkAuthorization(this._isAuthorized, this._onOpenFileAuthorizationReady.bind(this, link));
             };
             
             this._onOpenFileAuthorizationReady = function(link)
@@ -239,11 +287,54 @@ if(this.Graphite == null)
                 });
                 request.execute(function(resp) 
                 {
-                    // todo: if this is a graphite file, just reload inside the browser (after prompting save)
-                    
-                    window.location.href = "CodeEditor/code-editor.html?"+
-                        "link="+encodeURIComponent(resp.downloadUrl)+"&parentLink="+encodeURIComponent(this._link);
-                });
+                    if(resp.mimeType == "text/xml")
+                    {
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('GET', resp.downloadUrl);
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
+                        xhr.onload = function() 
+                        {
+                            var parser = new DOMParser();
+                            var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
+                            if(!this._builder.fromXML(xmlDoc))
+                            {
+                                // this is not a graphite XML file, just open it
+                                this._onLoadNonGraphiteFile(resp.downloadUrl);
+                            }
+                            else
+                            {
+                                this._pushFileId();
+                                this._currentFileId = resp.id;
+                                this._lastSavedFileContent = xhr.responseText;
+                                this._link = resp.downloadUrl;
+                                this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
+                                this._messager.refreshGoBack(true, this._goToPreviousFile.bind(this));
+                                this._messager.setFileName(this._filename);
+                            }
+                        }.bind(this);
+                        xhr.send();
+                    }
+                    else
+                    {
+                        // this is not a graphite file, just open it in code editor
+                        this._onLoadNonGraphiteFile(resp.downloadUrl);
+                    }
+                }.bind(this));
+            };
+            
+            this._onLoadNonGraphiteFile = function(url)
+            {
+                window.location.href = "CodeEditor/code-editor.html?"+
+                    "link="+encodeURIComponent(url)+"&parentLink="+encodeURIComponent(this._link);
+            };
+            
+            this._goToPreviousFile = function()
+            {
+                var prevFile = this._popFileId();
+                if(prevFile != undefined)
+                {
+                    this._onLoadFileId(prevFile, null);
+                }
             };
             
             this.load = function(callback)
@@ -265,30 +356,105 @@ if(this.Graphite == null)
             {
                 if (data.action == google.picker.Action.PICKED)
                 {
-                    var request = gapi.client.drive.files.get(
+                    if(data.docs[0].mimeType == "text/xml")
                     {
-                        'fileId': data.docs[0].id
-                    });
-                    request.execute(function(resp) 
+                        this._onLoadFileId(data.docs[0].id, this._resetFileStack.bind(this));
+                    }
+                    else
                     {
-                        // todo: ensure this is a graphite file!
+                        this._messager.showMessage("Cannot Load File Type");
+                    }
+                }
+            };
+            
+            this._onLoadFileId = function(fileId, callback)
+            {
+                var request = gapi.client.drive.files.get(
+                {
+                    'fileId': fileId
+                });
+                request.execute(function(resp) 
+                {
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('GET', decodeURIComponent(resp.downloadUrl));
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
+                    xhr.onload = function(param) 
+                    {
+                        var parser=new DOMParser();
+                        var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
                         
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('GET', decodeURIComponent(resp.downloadUrl));
-                        xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
-                        xhr.onload = function(param) 
+                        if(this._builder.fromXML(xmlDoc))
                         {
-                            this._currentFileId = data.docs[0].id;
+                            this._lastSavedFileContent = xhr.responseText;
+                            this._currentFileId = fileId;
                             this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
+                            this._messager.refreshGoBack(false);
                             this._messager.setFileName(this._filename);
                             
-                            var parser=new DOMParser();
-                            var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
-                            
-                            this._builder.fromXML(xmlDoc);
-                        }.bind(this);
-                        xhr.send();
-                    }.bind(this));
+                            if(callback != null)
+                            {
+                                callback();
+                            }
+                        }
+                        else
+                        {
+                            this._messager.showMessage("Cannot Load File Content");
+                        }
+                    }.bind(this);
+                    xhr.send();
+                }.bind(this));
+            };
+            
+            this._pushFileId = function()
+            {
+                if(document.cookie == undefined)
+                {
+                    this._resetFileStack();
+                }
+                
+                document.cookie += this._fileStackCookieDelim + this._currentFileId;
+            };
+            
+            this._popFileId = function()
+            {
+                var cookieLen = document.cookie.length;
+                if(cookieLen > 0)
+                {
+                    var lastFileStartIdx = document.cookie.lastIndexOf(this._fileStackCookieDelim);
+                    if(lastFileStartIdx >= 0)
+                    {
+                        var lastFile = document.cookie.substring(lastFileStartIdx + this._fileStackCookieDelim.length, 
+                            document.cookie.length);
+                        
+                        if(lastFileStartIdx > 0)
+                        {
+                            document.cookie = document.cookie.substring(0, lastFileStartIdx);
+                        }
+                        else
+                        {
+                            this._resetFileStack();
+                        }
+                        
+                        return lastFile;
+                    }
+                }
+            };
+            
+            this._resetFileStack = function()
+            {
+                document.cookie = "";
+            };
+            
+            this.isDirty = function()
+            {
+                if(this._lastSavedFileContent == undefined)
+                {
+                    // more optimized version
+                    return true;
+                }
+                else
+                {
+                    return this._lastSavedFileContent != this._builder.toXML();
                 }
             };
             
