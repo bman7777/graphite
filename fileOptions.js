@@ -8,17 +8,25 @@ if(this.Graphite == null)
     // -- FILE-OPTIONS definition
     function()
     {
-        Graphite.FileOptions = function(builder, messager)
+        Graphite.FileOptions = function(builder, messager, apiIsLoaded, clientIsLoaded)
         {
             this._builder = builder;
             this._messager = messager;
             this._fileStackCookieDelim = "--stack--";
+            this._apiIsLoaded = apiIsLoaded != false;
+            this._clientIsLoaded = clientIsLoaded != false;
             
             // todo: we may be loading a document that exists immediately
             this._messager.setFileName("Untitled");
             
             this._checkAuthorization = function(immediate, callback) 
             {
+                if(!this._apiIsLoaded)
+                {
+                    // don't even try to authorize if api isn't ready
+                    return;
+                }
+                
                 if(immediate == true || this._isAuthorized != true)
                 {
                     // as a sanity check- blank these out while we refresh them
@@ -71,10 +79,12 @@ if(this.Graphite == null)
                 var buttons = new Array();
                 if(currFileNameIsValid)
                 {
-                    buttons.push({id:'newButton', text:'Create New', desc:"Create a new file", onClickCallback:this._onNamedFile.bind(this, true)});
+                    buttons.push({id:'newButton', text:'Create New', desc:"Create a new file", 
+                        onClickCallback:this._onNamedFile.bind(this, true)});
                 }
                 
-                buttons.push({id:'nameButton', text:'Rename', desc:"Rename file", onClickCallback:this._onNamedFile.bind(this, false)});
+                buttons.push({id:'nameButton', text:'Rename', desc:"Rename file", 
+                    onClickCallback:this._onNamedFile.bind(this, false)});
                 buttons.push({id:'cancelButton', text:'Cancel', desc:"Don't create a new file"});
                 
                 this._builder.openPopup("Name File", settings, buttons);
@@ -168,7 +178,11 @@ if(this.Graphite == null)
             
             this._onSaveCallback = function(callback, event)
             {
-                if(this._isFileNameValid(this._filename) || this._onSelectFileName(event))
+                if(!this._clientIsLoaded)
+                {
+                    return false;
+                }
+                else if(this._isFileNameValid(this._filename) || this._onSelectFileName(event))
                 {
                     var doc = this._builder.toXML();
                     
@@ -205,7 +219,7 @@ if(this.Graphite == null)
                         'body': requestBody
                     });
                     
-                    this._lastSavedFileContent = doc;
+                    this._lastSavedFileContent = doc.trim();
                     request.execute(this._onSaveSuccess.bind(this, callback));
                     return true;
                 }
@@ -232,20 +246,29 @@ if(this.Graphite == null)
             
             this._createPicker = function(callback)
             {
-                var view = new google.picker.View(google.picker.ViewId.DOCS);
-                view.setMimeTypes("text/xml");
-                
-                var picker = new google.picker.PickerBuilder()
-                    .setOAuthToken(this._authToken)
-                    .addView(view)
-                    .setCallback(callback)
-                    .build();
-                 picker.setVisible(true);
+                if(this._apiIsLoaded)
+                {
+                    var view = new google.picker.View(google.picker.ViewId.DOCS);
+                    view.setMimeTypes("text/xml");
+                    
+                    var picker = new google.picker.PickerBuilder()
+                        .setOAuthToken(this._authToken)
+                        .addView(view)
+                        .setCallback(callback)
+                        .build();
+                     picker.setVisible(true);
+                }
             };
             
-            this.openFile = function(link)
+            this.openFile = function(fileId, preOpenCallback)
             {
-                if(link != undefined && link != "")
+                // by default, we are pushing the fileId, but we may be popping
+                if(preOpenCallback == null)
+                {
+                    preOpenCallback = this._pushFileId.bind(this);
+                }
+                
+                if(fileId != undefined && fileId != "")
                 {
                     if(this.isDirty())
                     {
@@ -259,8 +282,8 @@ if(this.Graphite == null)
                         
                         var buttons = 
                         [
-                            {id:'saveButton', text:'Save', desc:"Save Changes", 
-                                onClickCallback:this._onSaveCallback.bind(this, this._onOpenFileCheckAuthorization.bind(this, link))},
+                            {id:'saveButton', text:'Save', desc:"Save Changes", onClickCallback:this._onSaveCallback.bind(
+                                    this, this._onOpenFileCheckAuthorization.bind(this, fileId, preOpenCallback))},
                             {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
                         ];
                         
@@ -268,21 +291,26 @@ if(this.Graphite == null)
                     }
                     else
                     {
-                        this._onOpenFileCheckAuthorization(link);
+                        this._onOpenFileCheckAuthorization(fileId, preOpenCallback);
                     }
                 }
             };
             
-            this._onOpenFileCheckAuthorization = function(link)
+            this._onOpenFileCheckAuthorization = function(fileId, preOpenCallback)
             {
-                this._checkAuthorization(this._isAuthorized, this._onOpenFileAuthorizationReady.bind(this, link));
+                this._checkAuthorization(this._isAuthorized, this._onOpenFileAuthorizationReady.bind(this, fileId, preOpenCallback));
             };
             
-            this._onOpenFileAuthorizationReady = function(link)
+            this._onOpenFileAuthorizationReady = function(fileId, preOpenCallback)
             {
+                if(!this._clientIsLoaded)
+                {
+                    return;
+                }
+                
                 var request = gapi.client.request(
                 {
-                    'path': '/drive/v2/files/'+link,
+                    'path': '/drive/v2/files/'+fileId,
                     'method': 'GET'
                 });
                 request.execute(function(resp) 
@@ -303,12 +331,17 @@ if(this.Graphite == null)
                             }
                             else
                             {
-                                this._pushFileId();
+                                if(preOpenCallback != null)
+                                {
+                                    preOpenCallback();
+                                }
+                                
                                 this._currentFileId = resp.id;
-                                this._lastSavedFileContent = xhr.responseText;
+                                this._lastSavedFileContent = xhr.responseText.trim();
                                 this._link = resp.downloadUrl;
                                 this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
-                                this._messager.refreshGoBack(true, this._goToPreviousFile.bind(this));
+                                var hasAncestors = document.cookie.length > 0;
+                                this._messager.refreshGoBack(hasAncestors, this._goToPreviousFile.bind(this));
                                 this._messager.setFileName(this._filename);
                             }
                         }.bind(this);
@@ -330,10 +363,10 @@ if(this.Graphite == null)
             
             this._goToPreviousFile = function()
             {
-                var prevFile = this._popFileId();
+                var prevFile = this._getTopFileId();
                 if(prevFile != undefined)
                 {
-                    this._onLoadFileId(prevFile, null);
+                    this.openFile(prevFile, this._popFileId.bind(this));
                 }
             };
             
@@ -369,6 +402,11 @@ if(this.Graphite == null)
             
             this._onLoadFileId = function(fileId, callback)
             {
+                if(!this._clientIsLoaded)
+                {
+                    return;
+                }
+                
                 var request = gapi.client.drive.files.get(
                 {
                     'fileId': fileId
@@ -385,7 +423,7 @@ if(this.Graphite == null)
                         
                         if(this._builder.fromXML(xmlDoc))
                         {
-                            this._lastSavedFileContent = xhr.responseText;
+                            this._lastSavedFileContent = xhr.responseText.trim();
                             this._currentFileId = fileId;
                             this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
                             this._messager.refreshGoBack(false);
@@ -415,7 +453,7 @@ if(this.Graphite == null)
                 document.cookie += this._fileStackCookieDelim + this._currentFileId;
             };
             
-            this._popFileId = function()
+            this._getTopFileId = function()
             {
                 var cookieLen = document.cookie.length;
                 if(cookieLen > 0)
@@ -423,19 +461,24 @@ if(this.Graphite == null)
                     var lastFileStartIdx = document.cookie.lastIndexOf(this._fileStackCookieDelim);
                     if(lastFileStartIdx >= 0)
                     {
-                        var lastFile = document.cookie.substring(lastFileStartIdx + this._fileStackCookieDelim.length, 
-                            document.cookie.length);
-                        
-                        if(lastFileStartIdx > 0)
-                        {
-                            document.cookie = document.cookie.substring(0, lastFileStartIdx);
-                        }
-                        else
-                        {
-                            this._resetFileStack();
-                        }
-                        
-                        return lastFile;
+                        return document.cookie.substring(lastFileStartIdx + this._fileStackCookieDelim.length, cookieLen);
+                    }
+                }
+            };
+            
+            this._popFileId = function()
+            {
+                var cookieLen = document.cookie.length;
+                if(cookieLen > 0)
+                {
+                    var lastFileStartIdx = document.cookie.lastIndexOf(this._fileStackCookieDelim);
+                    if(lastFileStartIdx > 0)
+                    {
+                        document.cookie = document.cookie.substring(0, lastFileStartIdx);
+                    }
+                    else
+                    {
+                        this._resetFileStack();
                     }
                 }
             };
@@ -454,12 +497,98 @@ if(this.Graphite == null)
                 }
                 else
                 {
-                    return this._lastSavedFileContent != this._builder.toXML();
+                    var parser=new DOMParser();
+                    var lastSaveDoc = parser.parseFromString(this._lastSavedFileContent,"text/xml");
+                    var currentDoc = parser.parseFromString(this._builder.toXML(),"text/xml");
+                    
+                    if(lastSaveDoc.firstChild.nodeName != currentDoc.firstChild.nodeName &&
+                       lastSaveDoc.childNodes.length   == currentDoc.childNodes.length &&
+                       lastSaveDoc.childNodes.length   == 1)
+                    {
+                        // if they aren't both rooted in "graph" then don't even bother checking
+                        return false;
+                    }
+                    else
+                    {
+                        return this._AreXMLDocsDifferent(lastSaveDoc.firstChild.childNodes, currentDoc.firstChild.childNodes);
+                    }
                 }
             };
             
-            // after a bit, we should refresh authorization with immediate passed in
-            window.setTimeout(this._checkAuthorization.bind(this, true), 10);
+            this._AreXMLDocsDifferent = function(childrenA, childrenB)
+            {
+                if(childrenA.length != childrenB.length)
+                {
+                    return true;
+                }
+                
+                for(var i = 0; i < childrenA.length; i++)
+                {
+                    var nameA = childrenA[i].nodeName;
+                    if(childrenA[i].children.length <= 0)
+                    {
+                        var valueA = childrenA[i].textContent;
+                        var bMatch = -1;
+                        
+                        for(var j = 0; j < childrenB.length; j++)
+                        {
+                            var nameB = childrenB[j].nodeName;
+                            var valueB = childrenB[j].textContent;
+                            if(nameA == nameB && valueA == valueB)
+                            {
+                                bMatch = j;
+                                break;
+                            }
+                        }
+                        
+                        if(bMatch < 0)
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        var foundIt = false;
+                        for(var j = 0; j < childrenB.length; j++)
+                        {
+                            if(!this._AreXMLDocsDifferent(childrenA[i].childNodes, childrenB[j].childNodes))
+                            {
+                                foundIt = true;
+                                break;
+                            }
+                        }
+                        
+                        if(!foundIt)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            };
+            
+            this.setApiIsLoaded = function()
+            {
+                var wasLoaded = this._apiIsLoaded;
+                this._apiIsLoaded = true;
+                
+                if(!wasLoaded)
+                {
+                    this._checkAuthorization(true);
+                }
+            };
+            
+            this.setClientIsLoaded = function()
+            {
+                this._clientIsLoaded = true;
+            };
+            
+            // if we have an api instantly loaded, then check auth now
+            if(this._apiIsLoaded)
+            {
+                this._checkAuthorization(true);
+            }
         };
         
         Graphite.FileOptions.NEW = 0;

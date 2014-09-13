@@ -23,10 +23,19 @@
         var WINDOW_GUTTER = 25;
         var builder;
         var shapeSettings;
+        var apiIsLoaded = false;
+        var clientIsLoaded = false;
         
         function onClientLoad()
         {
             gapi.client.load('drive', 'v2', function() {});
+            
+            clientIsLoaded = true;
+            
+            if(builder != undefined)
+            {
+                builder.setClientIsLoaded();
+            }
         }
         
         function onApiLoad()
@@ -37,6 +46,13 @@
             var clientLib = document.createElement('script');
             clientLib.setAttribute("src", "https://apis.google.com/js/client.js?onload=onClientLoad");
             document.getElementsByTagName("head")[0].appendChild(clientLib);
+            
+            apiIsLoaded = true;
+            
+            if(builder != undefined)
+            {
+                builder.setApiIsLoaded();
+            }
         }
         
         function initializeGraphite()
@@ -47,7 +63,9 @@
                 width: window.innerWidth-WINDOW_GUTTER,
                 height: window.innerHeight-WINDOW_GUTTER,
                 popup: new Graphite.Popup('popup', 'popupScrim'),
-                messagerMount: 'messager'
+                messagerMount: 'messager',
+                apiIsLoaded: apiIsLoaded,
+                clientIsLoaded: clientIsLoaded
             });
         }
         

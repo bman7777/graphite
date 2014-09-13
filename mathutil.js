@@ -15,9 +15,14 @@ if(this.Graphite.MathUtil == null)
         {
             Graphite.MathUtil.getDistance = function(x1, y1, x2, y2) 
             {
-                var xComp = Math.exp(x2 - x1, 2);
-                var yComp = Math.exp(y2 - y1, 2);
+                var xComp = Math.pow(Math.abs(x2 - x1), 2);
+                var yComp = Math.pow(Math.abs(y2 - y1), 2);
                 return Math.sqrt(xComp + yComp);
+            };
+            
+            Graphite.MathUtil.Clamp = function(min, max, num)
+            {
+                return Math.max(min,Math.min(num,max));
             };
             
             Graphite.MathUtil.GetCenterPoint = function(startX, startY, endX, endY)

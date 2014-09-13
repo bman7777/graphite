@@ -34,7 +34,8 @@ if(this.Graphite == null)
             stage.add(this._nodeLayer);
             
             this._messager = new Graphite.Messager(stageProps.messagerMount, this);
-            this._fileOptions = new Graphite.FileOptions(this, this._messager);
+            this._fileOptions = new Graphite.FileOptions(this, this._messager, 
+                stageProps.apiIsLoaded, stageProps.clientIsLoaded);
             
             // make a factory for nodes
             this._nodeFactory = new Graphite.ShapeFactory(this);
@@ -626,6 +627,16 @@ if(this.Graphite == null)
                 {
                     this.removeNode(listChildren[i]);
                 }
+            };
+            
+            this.setApiIsLoaded = function()
+            {
+                this._fileOptions.setApiIsLoaded();
+            };
+            
+            this.setClientIsLoaded = function()
+            {
+                this._fileOptions.setClientIsLoaded();
             };
         };
         
