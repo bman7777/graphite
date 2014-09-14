@@ -83,10 +83,10 @@ if(this.Graphite == null)
                     var status = document.getElementById(this._statusMount);
                     status.innerHTML = message;
                     status.style.visibility = "visible";
-                    status.style.animation = "statusIn 1.5s ease-in";
-                    status.style.webkitAnimation = "statusIn 1.5s ease-in";
+                    status.style.animation = "statusIn 0.7s ease-in";
+                    status.style.webkitAnimation = "statusIn 0.7s ease-in";
                     
-                    this._statusIntervalId = setInterval(this._nextMessage.bind(this), 4500);
+                    this._statusIntervalId = setInterval(this._nextMessage.bind(this), 2500);
                 }
             };
             

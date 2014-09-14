@@ -6,7 +6,7 @@
     <link rel="stylesheet" type="text/css" href="Graph.css">
     
     <script src="kinetic-v5.1.0.min.js"></script>
-    <script src="mathutil.js"></script>
+    <script src="util.js"></script>
     <script src="builder.js"></script>
     <script src="node.js"></script>
     <script src="nodeOptions.js"></script>
@@ -23,13 +23,12 @@
         var WINDOW_GUTTER = 25;
         var builder;
         var shapeSettings;
-        var apiIsLoaded = false;
+        var apiTypesToLoad = [{name:"auth", isLoaded:false}, {name: "picker", isLoaded:false}];
         var clientIsLoaded = false;
+        var allApisAreLoaded = false;
         
-        function onClientLoad()
+        function onClientLoadComplete()
         {
-            gapi.client.load('drive', 'v2', function() {});
-            
             clientIsLoaded = true;
             
             if(builder != undefined)
@@ -38,20 +37,44 @@
             }
         }
         
-        function onApiLoad()
+        function onClientStartLoad()
         {
-            gapi.load('auth', {callback: function() {} });
-            gapi.load('picker', {callback: function() {} });
+            gapi.client.load('drive', 'v2', onClientLoadComplete);
+        }
+        
+        function onApiLoadComplete(apiLoadObj)
+        {
+            apiLoadObj.isLoaded = true;
             
-            var clientLib = document.createElement('script');
-            clientLib.setAttribute("src", "https://apis.google.com/js/client.js?onload=onClientLoad");
-            document.getElementsByTagName("head")[0].appendChild(clientLib);
-            
-            apiIsLoaded = true;
-            
-            if(builder != undefined)
+            var allAreLoaded = true;
+            for(var i = 0; i < apiTypesToLoad.length; i++)
             {
-                builder.setApiIsLoaded();
+                if(apiTypesToLoad[i].isLoaded != true)
+                {
+                    allAreLoaded = false;
+                    break;
+                }
+            }
+            
+            if(allAreLoaded)
+            {
+                allApisAreLoaded = true;
+                var clientLib = document.createElement('script');
+                clientLib.setAttribute("src", "https://apis.google.com/js/client.js?onload=onClientStartLoad");
+                document.getElementsByTagName("head")[0].appendChild(clientLib);
+                
+                if(builder != undefined)
+                {
+                    builder.setApiIsLoaded();
+                }
+            }
+        }
+        
+        function onStartApiLoad()
+        {
+            for(var i = 0; i < apiTypesToLoad.length; i++)
+            { 
+                gapi.load(apiTypesToLoad[i].name, {callback: onApiLoadComplete.bind(this, apiTypesToLoad[i])});
             }
         }
         
@@ -64,7 +87,7 @@
                 height: window.innerHeight-WINDOW_GUTTER,
                 popup: new Graphite.Popup('popup', 'popupScrim'),
                 messagerMount: 'messager',
-                apiIsLoaded: apiIsLoaded,
+                apiIsLoaded: allApisAreLoaded,
                 clientIsLoaded: clientIsLoaded
             });
         }
@@ -106,10 +129,10 @@
             s.parentNode.insertBefore(wf, s);
         })();
     </script>
-    <script src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>
+    <script src="https://apis.google.com/js/api.js?onload=onStartApiLoad"></script>
     
 </head>
-<body style="background-image:url('img/web/graphtile-new.gif')"
+<body style="background-image:url('img/web/graphtile-new.png')"
       oncontextmenu="return false;">
     
     <div id="container"></div>

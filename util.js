@@ -106,3 +106,67 @@ if(this.Graphite.MathUtil == null)
         };
     }
 )();
+
+if(this.Graphite.XMLUtil == null)
+{
+    this.Graphite.XMLUtil = {};
+}
+
+(
+    // -- MATHUTIL definition
+    function()
+    {
+        Graphite.XMLUtil.AreXMLDocsDifferent = function(childrenA, childrenB)
+        {
+            if(childrenA.length != childrenB.length)
+            {
+                return true;
+            }
+            
+            for(var i = 0; i < childrenA.length; i++)
+            {
+                var nameA = childrenA[i].nodeName;
+                if(childrenA[i].children.length <= 0)
+                {
+                    var valueA = childrenA[i].textContent;
+                    var bMatch = -1;
+                    
+                    for(var j = 0; j < childrenB.length; j++)
+                    {
+                        var nameB = childrenB[j].nodeName;
+                        var valueB = childrenB[j].textContent;
+                        if(nameA == nameB && valueA == valueB)
+                        {
+                            bMatch = j;
+                            break;
+                        }
+                    }
+                    
+                    if(bMatch < 0)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    var foundIt = false;
+                    for(var j = 0; j < childrenB.length; j++)
+                    {
+                        if(!this._AreXMLDocsDifferent(childrenA[i].childNodes, childrenB[j].childNodes))
+                        {
+                            foundIt = true;
+                            break;
+                        }
+                    }
+                    
+                    if(!foundIt)
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        };
+    }
+)();

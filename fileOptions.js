@@ -13,11 +13,9 @@ if(this.Graphite == null)
             this._builder = builder;
             this._messager = messager;
             this._fileStackCookieDelim = "--stack--";
+            this._statusOK = 200;
             this._apiIsLoaded = apiIsLoaded != false;
             this._clientIsLoaded = clientIsLoaded != false;
-            
-            // todo: we may be loading a document that exists immediately
-            this._messager.setFileName("Untitled");
             
             this._checkAuthorization = function(immediate, callback) 
             {
@@ -235,6 +233,7 @@ if(this.Graphite == null)
                 
                 // todo: error handling?
                 
+                this._currentFileId = event.id;
                 this._link = event.downloadUrl;
                 
                 // do whatever comes next if we can
@@ -315,42 +314,45 @@ if(this.Graphite == null)
                 });
                 request.execute(function(resp) 
                 {
-                    if(resp.mimeType == "text/xml")
+                    if(resp.code == this._statusOK || resp.code == undefined)
                     {
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('GET', resp.downloadUrl);
-                        xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
-                        xhr.onload = function() 
+                        if(resp.mimeType == "text/xml")
                         {
-                            var parser = new DOMParser();
-                            var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
-                            if(!this._builder.fromXML(xmlDoc))
+                            var xhr = new XMLHttpRequest();
+                            xhr.open('GET', resp.downloadUrl);
+                            xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
+                            xhr.onload = function() 
                             {
-                                // this is not a graphite XML file, just open it
-                                this._onLoadNonGraphiteFile(resp.downloadUrl);
-                            }
-                            else
-                            {
-                                if(preOpenCallback != null)
+                                var parser = new DOMParser();
+                                var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
+                                if(!this._builder.fromXML(xmlDoc))
                                 {
-                                    preOpenCallback();
+                                    // this is not a graphite XML file, just open it
+                                    this._onLoadNonGraphiteFile(resp.downloadUrl);
                                 }
-                                
-                                this._currentFileId = resp.id;
-                                this._lastSavedFileContent = xhr.responseText.trim();
-                                this._link = resp.downloadUrl;
-                                this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
-                                var hasAncestors = document.cookie.length > 0;
-                                this._messager.refreshGoBack(hasAncestors, this._goToPreviousFile.bind(this));
-                                this._messager.setFileName(this._filename);
-                            }
-                        }.bind(this);
-                        xhr.send();
-                    }
-                    else
-                    {
-                        // this is not a graphite file, just open it in code editor
-                        this._onLoadNonGraphiteFile(resp.downloadUrl);
+                                else
+                                {
+                                    if(preOpenCallback != null)
+                                    {
+                                        preOpenCallback();
+                                    }
+                                    
+                                    this._currentFileId = resp.id;
+                                    this._lastSavedFileContent = xhr.responseText.trim();
+                                    this._link = resp.downloadUrl;
+                                    this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
+                                    var hasAncestors = document.cookie.length > 0;
+                                    this._messager.refreshGoBack(hasAncestors, this._goToPreviousFile.bind(this));
+                                    this._messager.setFileName(this._filename);
+                                }
+                            }.bind(this);
+                            xhr.send();
+                        }
+                        else
+                        {
+                            // this is not a graphite file, just open it in code editor
+                            this._onLoadNonGraphiteFile(resp.downloadUrl);
+                        }
                     }
                 }.bind(this));
             };
@@ -413,33 +415,37 @@ if(this.Graphite == null)
                 });
                 request.execute(function(resp) 
                 {
-                    var xhr = new XMLHttpRequest();
-                    xhr.open('GET', decodeURIComponent(resp.downloadUrl));
-                    xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
-                    xhr.onload = function(param) 
+                    if(resp.code == this._statusOK || resp.code == undefined)
                     {
-                        var parser=new DOMParser();
-                        var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
-                        
-                        if(this._builder.fromXML(xmlDoc))
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('GET', decodeURIComponent(resp.downloadUrl));
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + this._authToken);
+                        xhr.onload = function(param) 
                         {
-                            this._lastSavedFileContent = xhr.responseText.trim();
-                            this._currentFileId = fileId;
-                            this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
-                            this._messager.refreshGoBack(false);
-                            this._messager.setFileName(this._filename);
+                            var parser=new DOMParser();
+                            var xmlDoc = parser.parseFromString(xhr.responseText,"text/xml");
                             
-                            if(callback != null)
+                            if(this._builder.fromXML(xmlDoc))
                             {
-                                callback();
+                                if(callback != null)
+                                {
+                                    callback();
+                                }
+                                
+                                this._lastSavedFileContent = xhr.responseText.trim();
+                                this._currentFileId = fileId;
+                                this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
+                                var hasAncestors = document.cookie.length > 0;
+                                this._messager.refreshGoBack(hasAncestors, this._goToPreviousFile.bind(this));
+                                this._messager.setFileName(this._filename);
                             }
-                        }
-                        else
-                        {
-                            this._messager.showMessage("Cannot Load File Content");
-                        }
-                    }.bind(this);
-                    xhr.send();
+                            else
+                            {
+                                this._messager.showMessage("Cannot Load File Content");
+                            }
+                        }.bind(this);
+                        xhr.send();
+                    }
                 }.bind(this));
             };
             
@@ -485,7 +491,7 @@ if(this.Graphite == null)
             
             this._resetFileStack = function()
             {
-                document.cookie = "";
+                document.cookie = ";expires=Wed; 01 Jan 1970";
             };
             
             this.isDirty = function()
@@ -505,67 +511,14 @@ if(this.Graphite == null)
                        lastSaveDoc.childNodes.length   == currentDoc.childNodes.length &&
                        lastSaveDoc.childNodes.length   == 1)
                     {
-                        // if they aren't both rooted in "graph" then don't even bother checking
+                        // if they aren't both rooted in 1 "graph" node then don't even bother checking
                         return false;
                     }
                     else
                     {
-                        return this._AreXMLDocsDifferent(lastSaveDoc.firstChild.childNodes, currentDoc.firstChild.childNodes);
+                        return Graphite.XMLUtil.AreXMLDocsDifferent(lastSaveDoc.firstChild.childNodes, currentDoc.firstChild.childNodes);
                     }
                 }
-            };
-            
-            this._AreXMLDocsDifferent = function(childrenA, childrenB)
-            {
-                if(childrenA.length != childrenB.length)
-                {
-                    return true;
-                }
-                
-                for(var i = 0; i < childrenA.length; i++)
-                {
-                    var nameA = childrenA[i].nodeName;
-                    if(childrenA[i].children.length <= 0)
-                    {
-                        var valueA = childrenA[i].textContent;
-                        var bMatch = -1;
-                        
-                        for(var j = 0; j < childrenB.length; j++)
-                        {
-                            var nameB = childrenB[j].nodeName;
-                            var valueB = childrenB[j].textContent;
-                            if(nameA == nameB && valueA == valueB)
-                            {
-                                bMatch = j;
-                                break;
-                            }
-                        }
-                        
-                        if(bMatch < 0)
-                        {
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        var foundIt = false;
-                        for(var j = 0; j < childrenB.length; j++)
-                        {
-                            if(!this._AreXMLDocsDifferent(childrenA[i].childNodes, childrenB[j].childNodes))
-                            {
-                                foundIt = true;
-                                break;
-                            }
-                        }
-                        
-                        if(!foundIt)
-                        {
-                            return true;
-                        }
-                    }
-                }
-                
-                return false;
             };
             
             this.setApiIsLoaded = function()
@@ -579,9 +532,20 @@ if(this.Graphite == null)
                 }
             };
             
+            this._autoLoadFromCookie = function()
+            {
+                // try to auto-load the last cookie'd file
+                var topFileId = this._getTopFileId();
+                if(topFileId != undefined)
+                {
+                    this._checkAuthorization(true, this._onLoadFileId.bind(this, topFileId, this._popFileId.bind(this)));
+                }
+            };
+            
             this.setClientIsLoaded = function()
             {
                 this._clientIsLoaded = true;
+                this._autoLoadFromCookie();
             };
             
             // if we have an api instantly loaded, then check auth now
@@ -589,6 +553,27 @@ if(this.Graphite == null)
             {
                 this._checkAuthorization(true);
             }
+            
+            // initialize to "Untitled", but still attempt to load the last 
+            // cookie file-- we can't rely on it succeeding though 
+            this._messager.setFileName("Untitled");
+            
+            // if we have a cookie, load up whatever is at the top of the stack
+            if(this._clientIsLoaded)
+            {
+                this._autoLoadFromCookie();
+            }
+            
+            // as we are leaving the page we should push our current file
+            // so when we return we are looking at the correct file.  We 
+            // normally only PUSH when going forward to something.
+            window.addEventListener("beforeunload", function (event)
+            {
+                if(this._currentFileId != undefined)
+                {
+                    this._pushFileId();
+                }
+            }.bind(this));
         };
         
         Graphite.FileOptions.NEW = 0;
