@@ -33,8 +33,9 @@ if(this.Graphite == null)
             this._nodeLayer = new Kinetic.Layer();
             stage.add(this._nodeLayer);
             
+            this._cookieControl = new Graphite.CookieControl(this);
             this._messager = new Graphite.Messager(stageProps.messagerMount, this);
-            this._fileOptions = new Graphite.FileOptions(this, this._messager, 
+            this._fileOptions = new Graphite.FileOptions(this, this._messager, this._cookieControl, 
                 stageProps.apiIsLoaded, stageProps.clientIsLoaded);
             
             // make a factory for nodes
@@ -529,7 +530,7 @@ if(this.Graphite == null)
                 var nodeList = nodeRoot.childNodes;
                 for(var i = 0; i < nodeList.length; i++)
                 {
-                    var details = this._createObjectFromXML(nodeList[i]);
+                    var details = Graphite.XMLUtil.createObjectFromXML(nodeList[i]);
                     
                     var nodeParams = details.container;
                     nodeParams.getState = this.getState.bind(this);
@@ -544,7 +545,7 @@ if(this.Graphite == null)
                 var connectionList = connectionRoot.childNodes;
                 for(var i = 0; i < connectionList.length; i++)
                 {
-                    var connectionParams = this._createObjectFromXML(connectionList[i]);
+                    var connectionParams = Graphite.XMLUtil.createObjectFromXML(connectionList[i]);
                     
                     connectionParams.getState = this.getState.bind(this);
                     connectionParams.options = this._lineFactory.createOptions();
@@ -575,43 +576,31 @@ if(this.Graphite == null)
                 }
             };
             
-            this._createObjectFromXML = function(xmlRoot)
+            this.isDirty = function(lastSavedContent)
             {
-                var returnObj = {};
-                var childList = xmlRoot.childNodes;
-                for(var i = 0; i < childList.length; i++)
+                if(lastSavedContent == undefined)
                 {
-                    if(childList[i].childNodes.length > 1)
+                    // more optimized version
+                    return true;
+                }
+                else
+                {
+                    var parser=new DOMParser();
+                    var lastSaveDoc = parser.parseFromString(lastSavedContent,"text/xml");
+                    var currentDoc = parser.parseFromString(this.toXML(),"text/xml");
+                    
+                    if(lastSaveDoc.firstChild.nodeName != currentDoc.firstChild.nodeName &&
+                       lastSaveDoc.childNodes.length   == currentDoc.childNodes.length &&
+                       lastSaveDoc.childNodes.length   == 1)
                     {
-                        returnObj[childList[i].nodeName] = this._createObjectFromXML(childList[i]);
+                        // if they aren't both rooted in 1 "graph" node then don't even bother checking
+                        return false;
                     }
                     else
                     {
-                        var str = childList[i].textContent;
-                        if(str == "true")
-                        {
-                            returnObj[childList[i].nodeName] = true;
-                        }
-                        else if(str == "false")
-                        {
-                            returnObj[childList[i].nodeName] = false;
-                        }
-                        else
-                        {
-                            var num = Number(str);
-                            if(isNaN(num))
-                            {
-                                returnObj[childList[i].nodeName] = str;
-                            }
-                            else
-                            {
-                                returnObj[childList[i].nodeName] = num;
-                            }
-                        }
+                        return Graphite.XMLUtil.areXMLDocsDifferent(lastSaveDoc.firstChild.childNodes, currentDoc.firstChild.childNodes);
                     }
                 }
-                
-                return returnObj;
             };
             
             this.clear = function()

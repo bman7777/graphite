@@ -116,7 +116,7 @@ if(this.Graphite.XMLUtil == null)
     // -- MATHUTIL definition
     function()
     {
-        Graphite.XMLUtil.AreXMLDocsDifferent = function(childrenA, childrenB)
+        Graphite.XMLUtil.areXMLDocsDifferent = function(childrenA, childrenB)
         {
             if(childrenA.length != childrenB.length)
             {
@@ -152,7 +152,7 @@ if(this.Graphite.XMLUtil == null)
                     var foundIt = false;
                     for(var j = 0; j < childrenB.length; j++)
                     {
-                        if(!this._AreXMLDocsDifferent(childrenA[i].childNodes, childrenB[j].childNodes))
+                        if(!Graphite.XMLUtil.areXMLDocsDifferent(childrenA[i].childNodes, childrenB[j].childNodes))
                         {
                             foundIt = true;
                             break;
@@ -167,6 +167,45 @@ if(this.Graphite.XMLUtil == null)
             }
             
             return false;
+        };
+        
+        Graphite.XMLUtil.createObjectFromXML = function(xmlRoot)
+        {
+            var returnObj = {};
+            var childList = xmlRoot.childNodes;
+            for(var i = 0; i < childList.length; i++)
+            {
+                if(childList[i].childNodes.length > 1)
+                {
+                    returnObj[childList[i].nodeName] = Graphite.XMLUtil.createObjectFromXML(childList[i]);
+                }
+                else
+                {
+                    var str = childList[i].textContent;
+                    if(str == "true")
+                    {
+                        returnObj[childList[i].nodeName] = true;
+                    }
+                    else if(str == "false")
+                    {
+                        returnObj[childList[i].nodeName] = false;
+                    }
+                    else
+                    {
+                        var num = Number(str);
+                        if(isNaN(num))
+                        {
+                            returnObj[childList[i].nodeName] = str;
+                        }
+                        else
+                        {
+                            returnObj[childList[i].nodeName] = num;
+                        }
+                    }
+                }
+            }
+            
+            return returnObj;
         };
     }
 )();

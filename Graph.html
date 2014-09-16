@@ -19,6 +19,7 @@
     <script src="menuConfig.js"></script>
     <script src="popup.js"></script>
     <script src="messager.js"></script>
+    <script src="cookieControl.js"></script>
     <script>
         var WINDOW_GUTTER = 25;
         var builder;
@@ -27,19 +28,17 @@
         var clientIsLoaded = false;
         var allApisAreLoaded = false;
         
-        function onClientLoadComplete()
-        {
-            clientIsLoaded = true;
-            
-            if(builder != undefined)
-            {
-                builder.setClientIsLoaded();
-            }
-        }
-        
         function onClientStartLoad()
         {
-            gapi.client.load('drive', 'v2', onClientLoadComplete);
+            gapi.client.load('drive', 'v2', function()
+            {
+                clientIsLoaded = true;
+                
+                if(builder != undefined)
+                {
+                    builder.setClientIsLoaded();
+                }
+            });
         }
         
         function onApiLoadComplete(apiLoadObj)

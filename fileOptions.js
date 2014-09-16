@@ -8,11 +8,13 @@ if(this.Graphite == null)
     // -- FILE-OPTIONS definition
     function()
     {
-        Graphite.FileOptions = function(builder, messager, apiIsLoaded, clientIsLoaded)
+        Graphite.FileOptions = function(builder, messager, cookieControl, apiIsLoaded, clientIsLoaded)
         {
             this._builder = builder;
             this._messager = messager;
+            this._cookieControl = cookieControl;
             this._fileStackCookieDelim = "--stack--";
+            this._fileStackType = "fileId";
             this._statusOK = 200;
             this._apiIsLoaded = apiIsLoaded != false;
             this._clientIsLoaded = clientIsLoaded != false;
@@ -118,7 +120,7 @@ if(this.Graphite == null)
                 {
                     // this is a valid filename that we can work with
                     this._currentFileId = undefined;
-                    this._resetFileStack();
+                    this._cookieControl.resetDataStack(this._fileStackType);
                     
                     var suffixIdx = fileName.lastIndexOf(".xml");
                     if(suffixIdx > 0)
@@ -259,17 +261,17 @@ if(this.Graphite == null)
                 }
             };
             
-            this.openFile = function(fileId, preOpenCallback)
+            this.openFile = function(fileId, closePreviousCallback)
             {
                 // by default, we are pushing the fileId, but we may be popping
-                if(preOpenCallback == null)
+                if(closePreviousCallback == null)
                 {
-                    preOpenCallback = this._pushFileId.bind(this);
+                    closePreviousCallback = this._cookieControl.pushData.bind(this._cookieControl, this._fileStackType);
                 }
                 
                 if(fileId != undefined && fileId != "")
                 {
-                    if(this.isDirty())
+                    if(this._builder.isDirty(this._lastSavedFileContent))
                     {
                         var settings = new Array();
                         settings[0] = [{id:'msgInput', text:"Save changes before continuing?", type:"message"}];
@@ -282,7 +284,7 @@ if(this.Graphite == null)
                         var buttons = 
                         [
                             {id:'saveButton', text:'Save', desc:"Save Changes", onClickCallback:this._onSaveCallback.bind(
-                                    this, this._onOpenFileCheckAuthorization.bind(this, fileId, preOpenCallback))},
+                                    this, this._onOpenFileCheckAuthorization.bind(this, fileId, closePreviousCallback))},
                             {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
                         ];
                         
@@ -290,17 +292,17 @@ if(this.Graphite == null)
                     }
                     else
                     {
-                        this._onOpenFileCheckAuthorization(fileId, preOpenCallback);
+                        this._onOpenFileCheckAuthorization(fileId, closePreviousCallback);
                     }
                 }
             };
             
-            this._onOpenFileCheckAuthorization = function(fileId, preOpenCallback)
+            this._onOpenFileCheckAuthorization = function(fileId, closePreviousCallback)
             {
-                this._checkAuthorization(this._isAuthorized, this._onOpenFileAuthorizationReady.bind(this, fileId, preOpenCallback));
+                this._checkAuthorization(this._isAuthorized, this._onOpenFileAuthorizationReady.bind(this, fileId, closePreviousCallback));
             };
             
-            this._onOpenFileAuthorizationReady = function(fileId, preOpenCallback)
+            this._onOpenFileAuthorizationReady = function(fileId, closePreviousCallback)
             {
                 if(!this._clientIsLoaded)
                 {
@@ -332,17 +334,18 @@ if(this.Graphite == null)
                                 }
                                 else
                                 {
-                                    if(preOpenCallback != null)
+                                    if(closePreviousCallback != null)
                                     {
-                                        preOpenCallback();
+                                        closePreviousCallback(this._currentFileId);
                                     }
                                     
                                     this._currentFileId = resp.id;
                                     this._lastSavedFileContent = xhr.responseText.trim();
                                     this._link = resp.downloadUrl;
                                     this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
-                                    var hasAncestors = document.cookie.length > 0;
-                                    this._messager.refreshGoBack(hasAncestors, this._goToPreviousFile.bind(this));
+                                    
+                                    // do messager last since we are done with actual file work
+                                    this._messager.refreshGoBack(this._cookieControl.getNumItemsInStack(this._fileStackType) > 0, this._goToPreviousFile.bind(this));
                                     this._messager.setFileName(this._filename);
                                 }
                             }.bind(this);
@@ -365,10 +368,10 @@ if(this.Graphite == null)
             
             this._goToPreviousFile = function()
             {
-                var prevFile = this._getTopFileId();
+                var prevFile = this._cookieControl.getTopData(this._fileStackType);
                 if(prevFile != undefined)
                 {
-                    this.openFile(prevFile, this._popFileId.bind(this));
+                    this.openFile(prevFile, this._cookieControl.popData.bind(this._cookieControl, this._fileStackType));
                 }
             };
             
@@ -393,7 +396,7 @@ if(this.Graphite == null)
                 {
                     if(data.docs[0].mimeType == "text/xml")
                     {
-                        this._onLoadFileId(data.docs[0].id, this._resetFileStack.bind(this));
+                        this._onLoadFileId(data.docs[0].id, this._cookieControl.resetDataStack.bind(this._cookieControl, this._fileStackType));
                     }
                     else
                     {
@@ -402,7 +405,7 @@ if(this.Graphite == null)
                 }
             };
             
-            this._onLoadFileId = function(fileId, callback)
+            this._onLoadFileId = function(fileId, loadCompleteCallback)
             {
                 if(!this._clientIsLoaded)
                 {
@@ -427,16 +430,17 @@ if(this.Graphite == null)
                             
                             if(this._builder.fromXML(xmlDoc))
                             {
-                                if(callback != null)
-                                {
-                                    callback();
-                                }
-                                
                                 this._lastSavedFileContent = xhr.responseText.trim();
                                 this._currentFileId = fileId;
                                 this._filename = resp.title.substring(0, resp.title.lastIndexOf(".xml"));
-                                var hasAncestors = document.cookie.length > 0;
-                                this._messager.refreshGoBack(hasAncestors, this._goToPreviousFile.bind(this));
+                                
+                                if(loadCompleteCallback != null)
+                                {
+                                    loadCompleteCallback(this._currentFileId);
+                                }
+                                
+                                // do messager last since we are done with actual file work
+                                this._messager.refreshGoBack(this._cookieControl.getNumItemsInStack(this._fileStackType) > 0, this._goToPreviousFile.bind(this));
                                 this._messager.setFileName(this._filename);
                             }
                             else
@@ -447,78 +451,6 @@ if(this.Graphite == null)
                         xhr.send();
                     }
                 }.bind(this));
-            };
-            
-            this._pushFileId = function()
-            {
-                if(document.cookie == undefined)
-                {
-                    this._resetFileStack();
-                }
-                
-                document.cookie += this._fileStackCookieDelim + this._currentFileId;
-            };
-            
-            this._getTopFileId = function()
-            {
-                var cookieLen = document.cookie.length;
-                if(cookieLen > 0)
-                {
-                    var lastFileStartIdx = document.cookie.lastIndexOf(this._fileStackCookieDelim);
-                    if(lastFileStartIdx >= 0)
-                    {
-                        return document.cookie.substring(lastFileStartIdx + this._fileStackCookieDelim.length, cookieLen);
-                    }
-                }
-            };
-            
-            this._popFileId = function()
-            {
-                var cookieLen = document.cookie.length;
-                if(cookieLen > 0)
-                {
-                    var lastFileStartIdx = document.cookie.lastIndexOf(this._fileStackCookieDelim);
-                    if(lastFileStartIdx > 0)
-                    {
-                        document.cookie = document.cookie.substring(0, lastFileStartIdx);
-                    }
-                    else
-                    {
-                        this._resetFileStack();
-                    }
-                }
-            };
-            
-            this._resetFileStack = function()
-            {
-                document.cookie = ";expires=Wed; 01 Jan 1970";
-            };
-            
-            this.isDirty = function()
-            {
-                if(this._lastSavedFileContent == undefined)
-                {
-                    // more optimized version
-                    return true;
-                }
-                else
-                {
-                    var parser=new DOMParser();
-                    var lastSaveDoc = parser.parseFromString(this._lastSavedFileContent,"text/xml");
-                    var currentDoc = parser.parseFromString(this._builder.toXML(),"text/xml");
-                    
-                    if(lastSaveDoc.firstChild.nodeName != currentDoc.firstChild.nodeName &&
-                       lastSaveDoc.childNodes.length   == currentDoc.childNodes.length &&
-                       lastSaveDoc.childNodes.length   == 1)
-                    {
-                        // if they aren't both rooted in 1 "graph" node then don't even bother checking
-                        return false;
-                    }
-                    else
-                    {
-                        return Graphite.XMLUtil.AreXMLDocsDifferent(lastSaveDoc.firstChild.childNodes, currentDoc.firstChild.childNodes);
-                    }
-                }
             };
             
             this.setApiIsLoaded = function()
@@ -535,10 +467,11 @@ if(this.Graphite == null)
             this._autoLoadFromCookie = function()
             {
                 // try to auto-load the last cookie'd file
-                var topFileId = this._getTopFileId();
+                var topFileId = this._cookieControl.getTopData(this._fileStackType);
                 if(topFileId != undefined)
                 {
-                    this._checkAuthorization(true, this._onLoadFileId.bind(this, topFileId, this._popFileId.bind(this)));
+                    this._checkAuthorization(true, this._onLoadFileId.bind(this, topFileId, 
+                        this._cookieControl.popData.bind(this._cookieControl, this._fileStackType)));
                 }
             };
             
@@ -571,7 +504,7 @@ if(this.Graphite == null)
             {
                 if(this._currentFileId != undefined)
                 {
-                    this._pushFileId();
+                    this._cookieControl.pushData(this._fileStackType, this._currentFileId);
                 }
             }.bind(this));
         };
