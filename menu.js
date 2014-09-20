@@ -1,202 +1,145 @@
-
-if(this.GraphiteMenu == null)
+if(this.Graphite == null)
 {
-    this.GraphiteMenu = {};
+    this.Graphite = {};
 }
 
 (
     // -- MENU definition
     function()
     {
-        GraphiteMenu.createRootMenu = function(mountId, graphiteBuilder)
+        Graphite.Menu = function(mountId, eventCallback)
         {
-            this._graphiteBuilder = graphiteBuilder;
+            Graphite.Menu.BuilderCallback = eventCallback;
             
-            if(mountId != null)
+            this.addMenuItem = function(props)
             {
-                var rootId = "tableRoot";
-                document.getElementById(mountId).innerHTML = "<table id=\""+rootId+"\"></table>";
-                return rootId;
-            }
-        };
-        
-        GraphiteMenu.addMenuItem = function(mountId, props)
-        {
-            if(mountId != null && props != null)
-            {
-                var highlightId = props.title+"Highlight";
-                var subMenuId = props.title+"SubMenu";
-                var textId = props.title+"Label";
-                
-                var menuItem = "<tr onmouseover=\"GraphiteMenu.onHighlightItem('"+highlightId+"', '"+textId+"')\" ";
-                menuItem +=        "onmouseout=\"GraphiteMenu.UN_onHighlightItem('"+highlightId+"', '"+textId+"')\" ";
-                
-                if(props.title == "Select")
+                if(props != null)
                 {
-                    menuItem += "onclick=\"GraphiteMenu.onClickSubMenuIcon()\">";
-                }
-                else
-                {
-                    menuItem += "onclick=\"GraphiteMenu.onToggleSubMenu('"+subMenuId+"')\">";
-                }
-                
-                menuItem += "<td><a href=\"#\" title=\""+props.desc+"\">";
-                menuItem +=     "<div class=\"menuRowOff\" id=\""+highlightId+"\">";
-                menuItem +=         "<div class=\"menuIcon\" style=\"background-image:url('"+props.iconImg+"');\"></div>";
-                menuItem +=     "</div>";
-                menuItem +=     "<p class=\"menuTextOff\" id=\""+textId+"\">"+props.title+"</p>";
-                menuItem += "</a></td>";
-                menuItem +  "</tr>";
-                
-                document.getElementById(mountId).innerHTML += menuItem;
-                
-                return subMenuId;
-            }
-        };
-        
-        // highlight a menu category
-        GraphiteMenu.onHighlightItem = function(bgId, textId)
-        {
-            if(textId != null)
-            {
-                document.getElementById(textId).className = "menuTextOn";
-            }
-            
-            if(bgId != null)
-            {
-                document.getElementById(bgId).className = "menuRowOn";
-            }
-        };
-        
-        // no longer highlight a menu category
-        GraphiteMenu.UN_onHighlightItem = function(bgId, textId)
-        {
-            if(textId != null)
-            {
-                document.getElementById(textId).className = "menuTextOff";
-            }
-            
-            if(bgId != null)
-            {
-                document.getElementById(bgId).className = "menuRowOff";
-            }
-        };
-    }
-)(),
-
-(
-    // -- SUBMENU definition
-    function()
-    {
-        // add a new submenu to the given mount
-        GraphiteMenu.addSubMenu = function(mountId, subMenuId, icons)
-        {
-            if(mountId != null && subMenuId != null)
-            {
-                var subMenu = "<tr id='"+subMenuId+"' style='display: none;'><td>";
-                subMenu += "<table class='subMenu'><tr></tr>";
-                
-                var MAX_ICONS_PER_ROW = 2;
-                var MAX_ROWS = 2;
-                
-                // loop through each icon and add them to a td in the submenu
-                for(var i = 0; i < (MAX_ICONS_PER_ROW * MAX_ROWS); i++)
-                {
-                    // if this is the first icon (of the row) initialize the tr
-                    if(i % MAX_ICONS_PER_ROW == 0)
-                    {
-                        // if we had a previous row in progress end that row
-                        if(i > 0)
-                        {
-                            subMenu += "<td class='subMenuGutter'></td></tr>";
-                        }
-                        
-                        subMenu += "<tr><td class='subMenuGutter'></td>";
-                    }
+                    var highlightId = props.title+"Highlight";
+                    var subMenuId = props.title+"SubMenu";
+                    var textId = props.title+"Label";
                     
-                    if(i < icons.length)
+                    var menuItem = "";
+                    if(props.title == "Select")
                     {
-                        var highlightId = icons[i].title+"Highlight";
-                        
-                        subMenu += "<td class='subMenuIcon' ";
-                        subMenu +=     "onmouseover=\"GraphiteMenu.onHighlightSubMenuIcon('"+highlightId+"')\" ";
-                        subMenu +=     "onmouseout=\"GraphiteMenu.UN_onHighlightSubMenuIcon('"+highlightId+"')\" ";
-                        subMenu +=     "onclick=\"GraphiteMenu.onClickSubMenuIcon("+icons[i].category+", "+icons[i].type+")\">";
-                        subMenu +=         "<a href='#' title='"+icons[i].desc+"'>";
-                        subMenu +=             "<div class='subMenuIconHighlight' id='"+highlightId+"' style=\"background-image:url('"+icons[i].iconImg+"');\"></div>";
-                        subMenu +=         "</a>";
-                        subMenu += "</td>";
+                        menuItem += "<tr id=\""+subMenuId+"Row\" onclick=\"Graphite.Menu.ItemClickEvent()\"";
                     }
                     else
                     {
-                        subMenu += "<td class='subMenuGutter'></td>";
+                        menuItem += "<tr id=\""+subMenuId+"Row\" onclick=\"Graphite.Menu.ToggleSubMenuEvent('"+subMenuId+"')\"";
+                    }
+                    menuItem    +=      " onmouseover=\"Graphite.Menu.HighlightItem('"+highlightId+"', '"+textId+"')\"";
+                    menuItem    +=      " onmouseout=\"Graphite.Menu.UnHighlightItem('"+highlightId+"', '"+textId+"')\">";
+                    menuItem    +=      "<td><a href=\"#\" title=\""+props.desc+"\">";
+                    menuItem    +=          "<div class=\"menuRowOff\" id=\""+highlightId+"\">";
+                    menuItem    +=               "<div class=\"menuIcon\" style=\"background-image:url('"+props.iconImg+"');\"></div>";
+                    menuItem    +=          "</div>";
+                    menuItem    +=          "<p class=\"menuTextOff\" id=\""+textId+"\">"+props.title+"</p>";
+                    menuItem    +=      "</a></td>";
+                    menuItem    += "</tr>";
+                    
+                    this._root.innerHTML += menuItem;
+                    
+                    return subMenuId;
+                }
+            };
+            
+            //add a new submenu to the given mount
+            this.addSubMenu = function(subMenuId, icons)
+            {
+                if(subMenuId != null)
+                {
+                    var subMenu = "<tr id='"+subMenuId+"' style='display: none;'><td>";
+                    subMenu += "<table class='subMenu'><tr></tr>";
+                    
+                    var MAX_ICONS_PER_ROW = 2;
+                    var MAX_ROWS = 2;
+                    
+                    // loop through each icon and add them to a td in the submenu
+                    for(var i = 0; i < (MAX_ICONS_PER_ROW * MAX_ROWS); i++)
+                    {
+                        // if this is the first icon (of the row) initialize the tr
+                        if(i % MAX_ICONS_PER_ROW == 0)
+                        {
+                            // if we had a previous row in progress end that row
+                            if(i > 0)
+                            {
+                                subMenu += "<td class='subMenuGutter'></td></tr>";
+                            }
+                            
+                            subMenu += "<tr><td class='subMenuGutter'></td>";
+                        }
+                        
+                        if(i < icons.length)
+                        {
+                            icons[i].highlightId = icons[i].title+"Highlight";
+                            icons[i].id = icons[i].title+"Icon";
+                            
+                            subMenu += "<td class='subMenuIcon' id='"+icons[i].id+"'";
+                            subMenu +=     " onclick=\"Graphite.Menu.ItemClickEvent("+icons[i].category+", "+icons[i].type+")\"";
+                            subMenu +=     " onmouseover=\"Graphite.Menu.HighlightSubMenuIcon('"+icons[i].highlightId+"')\"";
+                            subMenu +=     " onmouseout=\"Graphite.Menu.UnHighlightSubMenuIcon('"+icons[i].highlightId+"')\">";
+                            subMenu +=         "<a href='#' title='"+icons[i].desc+"'>";
+                            subMenu +=             "<div class='subMenuIconHighlight' id='"+icons[i].highlightId+"' style=\"background-image:url('"+icons[i].iconImg+"');\"></div>";
+                            subMenu +=         "</a>";
+                            subMenu += "</td>";
+                        }
+                        else
+                        {
+                            subMenu += "<td class='subMenuGutter'></td>";
+                        }
+                        
+                        // if this is the last icon of the last row, end it now
+                        if((i+1) == (MAX_ICONS_PER_ROW * MAX_ROWS))
+                        {
+                            subMenu += "<td class='subMenuGutter'></td></tr>";
+                        }
                     }
                     
-                    // if this is the last icon of the last row, end it now
-                    if((i+1) == (MAX_ICONS_PER_ROW * MAX_ROWS))
-                    {
-                        subMenu += "<td class='subMenuGutter'></td></tr>";
-                    }
+                    // end the table
+                    subMenu += "<tr></tr></table></td></tr>";
+                    
+                    this._root.innerHTML += subMenu;
                 }
-                
-                // end the table
-                subMenu += "<tr></tr></table></td></tr>";
-                
-                document.getElementById(mountId).innerHTML += subMenu;
-            }
-        };
-        
-        // the user is highlighting this submenu icon
-        GraphiteMenu.onHighlightSubMenuIcon = function(iconHighlightId)
-        {
-            if(iconHighlightId != null)
+            };
+            
+            if(mountId != null)
             {
-                // set the highlight overlay
-                document.getElementById(iconHighlightId).style.borderColor = "#559dc9";
+                var mount = document.getElementById(mountId);
+                mount.innerHTML = "<table><tbody id='menuTableRoot'></tbody></table>";
+                this._root = document.getElementById("menuTableRoot");
             }
         };
-        
-        // the user is no longer highlighting this submenu icon
-        GraphiteMenu.UN_onHighlightSubMenuIcon = function(iconHighlightId)
-        {
-            if(iconHighlightId != null)
-            {
-                // clear the highlight overlay
-                document.getElementById(iconHighlightId).style.borderColor = "transparent";
-            }
-        };
-        
         // when a submenu is clicked, activate its action
-        GraphiteMenu.onClickSubMenuIcon = function(category, type)
+        Graphite.Menu.ItemClickEvent = function(category, type)
         {
             // make sure we aren't building two things at once
-            this._graphiteBuilder.clearUnfinishedBuilding();
+            Graphite.Menu.BuilderCallback("clearUnfinishedBuilding");
             
             switch(category)
             {
-                case Graphite.Builder.CATEGORY_NODE:
+                case Graphite.MenuConfig.CATEGORY_NODE:
                     // attempt to add something of the given type
-                    this._graphiteBuilder.addNode(type);
+                    Graphite.Menu.BuilderCallback("addNode", type);
                     break;
                 
-                case Graphite.Builder.CATEGORY_CONNECTION:
+                case Graphite.MenuConfig.CATEGORY_CONNECTION:
                     // this will setup the potential for a new line
-                    this._graphiteBuilder.readyForNewConnection(type);
+                    Graphite.Menu.BuilderCallback("addConnection", type);
                     break;
                     
-                case Graphite.Builder.CATEGORY_FILE:
+                case Graphite.MenuConfig.CATEGORY_FILE:
                     // this will setup a save or load
-                    this._graphiteBuilder.processFile(type);
+                    Graphite.Menu.BuilderCallback("processFile", type);
                     break;
                     
                 default:
-                    this._graphiteBuilder.enterSelectionState();
+                    Graphite.Menu.BuilderCallback("selection");
                     break;
             }
         };
-        
         // if a submenu is open- close it (and vice-versa)
-        GraphiteMenu.onToggleSubMenu = function(subMenuId)
+        Graphite.Menu.ToggleSubMenuEvent = function(subMenuId)
         {
             var subMenu = document.getElementById(subMenuId);
             if(subMenu != null)
@@ -221,6 +164,52 @@ if(this.GraphiteMenu == null)
                 }
                 
                 this._subMenuVisible[subMenuId] = !this._subMenuVisible[subMenuId];
+            }
+        };
+        // highlight a menu category
+        Graphite.Menu.HighlightItem = function(bgId, textId)
+        {
+            if(textId != null)
+            {
+                document.getElementById(textId).className = "menuTextOn";
+            }
+            
+            if(bgId != null)
+            {
+                document.getElementById(bgId).className = "menuRowOn";
+            }
+        };
+        
+        // no longer highlight a menu category
+        Graphite.Menu.UnHighlightItem = function(bgId, textId)
+        {
+            if(textId != null)
+            {
+                document.getElementById(textId).className = "menuTextOff";
+            }
+            
+            if(bgId != null)
+            {
+                document.getElementById(bgId).className = "menuRowOff";
+            }
+        };
+        // the user is highlighting this submenu icon
+        Graphite.Menu.HighlightSubMenuIcon = function(iconHighlightId)
+        {
+            if(iconHighlightId != null)
+            {
+                // set the highlight overlay
+                document.getElementById(iconHighlightId).style.borderColor = "#559dc9";
+            }
+        };
+        
+        // the user is no longer highlighting this submenu icon
+        Graphite.Menu.UnHighlightSubMenuIcon = function(iconHighlightId)
+        {
+            if(iconHighlightId != null)
+            {
+                // clear the highlight overlay
+                document.getElementById(iconHighlightId).style.borderColor = "transparent";
             }
         };
     }

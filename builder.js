@@ -35,8 +35,6 @@ if(this.Graphite == null)
             
             this._cookieControl = new Graphite.CookieControl(this);
             this._messager = new Graphite.Messager(stageProps.messagerMount, this);
-            this._fileOptions = new Graphite.FileOptions(this, this._messager, this._cookieControl, 
-                stageProps.apiIsLoaded, stageProps.clientIsLoaded);
             
             // make a factory for nodes
             this._nodeFactory = new Graphite.ShapeFactory(this);
@@ -97,7 +95,7 @@ if(this.Graphite == null)
             {
                 if(this._buildState == null)
                 {
-                    this._buildState = Graphite.Builder.STATE_SELECT;
+                    this._buildState = Graphite.MenuConfig.STATE_SELECT;
                 }
                 
                 return this._buildState;
@@ -202,15 +200,15 @@ if(this.Graphite == null)
             {
                 switch(type)
                 {
-                    case Graphite.FileOptions.NEW:
+                    case Graphite.MenuConfig.FILE_NEW:
                         this._fileOptions.newFile();
                         break;
                     
-                    case Graphite.FileOptions.SAVE:
+                    case Graphite.MenuConfig.FILE_SAVE:
                         this._fileOptions.save();
                         break;
                         
-                    case Graphite.FileOptions.LOAD:
+                    case Graphite.MenuConfig.FILE_LOAD:
                         this._fileOptions.load(param);
                         break;
                 }
@@ -223,7 +221,7 @@ if(this.Graphite == null)
                 this._cancelAddNode();
                 
                 // we are in connection state now
-                this._buildState = Graphite.Builder.STATE_NODE;
+                this._buildState = Graphite.MenuConfig.STATE_NODE;
                 
                 // make mouse look different
                 this._canvas.style.cursor = "pointer";
@@ -298,7 +296,7 @@ if(this.Graphite == null)
                 this._cancelNewConnection();
                 
                 // we are in connection state now
-                this._buildState = Graphite.Builder.STATE_CONNECTION;
+                this._buildState = Graphite.MenuConfig.STATE_CONNECTION;
                 
                 // make mouse look different
                 this._canvas.style.cursor = "crosshair";
@@ -424,7 +422,7 @@ if(this.Graphite == null)
             this.enterSelectionState = function()
             {
                 // we are in selection state now (maybe temporarily)
-                this._buildState = Graphite.Builder.STATE_SELECT;
+                this._buildState = Graphite.MenuConfig.STATE_SELECT;
             };
             
             // of a node was in process, cancel it
@@ -618,23 +616,46 @@ if(this.Graphite == null)
                 }
             };
             
-            this.setApiIsLoaded = function()
+            this.setFileOptions = function(fileOptions)
             {
-                this._fileOptions.setApiIsLoaded();
+                this._fileOptions = fileOptions;
             };
             
-            this.setClientIsLoaded = function()
+            this.getCookie = function()
             {
-                this._fileOptions.setClientIsLoaded();
+                return this._cookieControl;
+            };
+            
+            this.getMessager = function()
+            {
+                return this._messager;
+            };
+            
+            this.processMenuEvent = function(event, param)
+            {
+                switch(event)
+                {
+                    case "clearUnfinishedBuilding":
+                        this.clearUnfinishedBuilding();
+                        break;
+                        
+                    case "addNode":
+                        this.addNode(param);
+                        break;
+                    
+                    case "addConnection":
+                        this.readyForNewConnection(param);
+                        break;
+                        
+                    case "processFile":
+                        this.processFile(param);
+                        break;
+                        
+                    case "selection":
+                        this.enterSelectionState();
+                        break;
+                };
             };
         };
-        
-        Graphite.Builder.CATEGORY_NODE = 0;
-        Graphite.Builder.CATEGORY_CONNECTION = 1;
-        Graphite.Builder.CATEGORY_FILE = 2;
-        
-        Graphite.Builder.STATE_SELECT = 0;
-        Graphite.Builder.STATE_NODE = 1;
-        Graphite.Builder.STATE_CONNECTION = 2;
     }
 )();

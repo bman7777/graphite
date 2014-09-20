@@ -274,7 +274,7 @@ if(this.Graphite == null)
             // listen for opening/closing the options
             this.on('dblclick', function(event)
             {
-                if(properties.getState() == Graphite.Builder.STATE_SELECT)
+                if(properties.getState() == Graphite.MenuConfig.STATE_SELECT)
                 {
                     if(!this._optionDisplay.isShowing())
                     {

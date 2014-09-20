@@ -83,11 +83,11 @@ if(this.Graphite == null)
                 
                 switch(properties.type)
                 {
-                    case Graphite.ShapeFactory.TRIANGLE:
+                    case Graphite.MenuConfig.SHAPE_TRIANGLE:
                         shape = this._createTriangle(unHighlightColor);
                         break;
 
-                    case Graphite.ShapeFactory.SQUARE:
+                    case Graphite.MenuConfig.SHAPE_SQUARE:
                         shape = this._createSquare(unHighlightColor);
                         break;
 
@@ -169,7 +169,7 @@ if(this.Graphite == null)
                 
                 switch(type)
                 {
-                    case Graphite.ShapeFactory.TRIANGLE:
+                    case Graphite.MenuConfig.SHAPE_TRIANGLE:
                         optionProps.bgImageSrc = "img/web/lineHalo.png";
                         optionProps.contentProps.x = 58;
                         optionProps.contentProps.y = -39;
@@ -180,7 +180,7 @@ if(this.Graphite == null)
                         optionProps.bg = {width: 12, height:150, rotation: -33};
                         break;
                         
-                    case Graphite.ShapeFactory.SQUARE:
+                    case Graphite.MenuConfig.SHAPE_SQUARE:
                         optionProps.bgImageSrc = "img/web/lineHalo.png";
                         optionProps.contentProps.x = 72;
                         optionProps.contentProps.y = -10;
@@ -219,9 +219,5 @@ if(this.Graphite == null)
         
         Graphite.ShapeFactory.DEFAULT_FILL_COLOR = '#CCEEEE';
         Graphite.ShapeFactory.DEFAULT_RADIUS = 75;
-        
-        Graphite.ShapeFactory.CIRCLE = 0;
-        Graphite.ShapeFactory.SQUARE = 1;
-        Graphite.ShapeFactory.TRIANGLE = 2;
     }
 )();

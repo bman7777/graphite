@@ -35,11 +35,11 @@ if(this.Graphite == null)
             
             this._getStrokeWidthForType = function(isHighlighted)
             {
-                if(this._type == Graphite.Connection.DOTTED)
+                if(this._type == Graphite.MenuConfig.CONNECTION_DOTTED)
                 {
                     return isHighlighted ? 6 : 5;
                 }
-                if(this._type == Graphite.Connection.DASHED)
+                if(this._type == Graphite.MenuConfig.CONNECTION_DASHED)
                 {
                     return isHighlighted ? 6 : 4;
                 }
@@ -60,11 +60,11 @@ if(this.Graphite == null)
             this._startArrowEnabled = properties.startArrowVisible == true;
             this._endArrowEnabled = properties.endArrowVisible == true;
             
-            if(this._type == Graphite.Connection.DASHED)
+            if(this._type == Graphite.MenuConfig.CONNECTION_DASHED)
             {
                 properties.dash =[25, 10];
             }
-            else if(this._type == Graphite.Connection.DOTTED)
+            else if(this._type == Graphite.MenuConfig.CONNECTION_DOTTED)
             {
                 properties.dash =[1, 8];
                 properties.lineCap = "round";
@@ -148,7 +148,7 @@ if(this.Graphite == null)
             // listen for opening/closing the options
             this.on('dblclick', function(event)
             {
-                if(properties.getState() == Graphite.Builder.STATE_SELECT)
+                if(properties.getState() == -Graphite.MenuConfig.STATE_SELECT)
                 {
                     if(!this._optionDisplay.isShowing())
                     {
@@ -364,9 +364,6 @@ if(this.Graphite == null)
         };
         
         Kinetic.Util.extend(Graphite.Connection, Kinetic.Group);
-        Graphite.Connection.SOLID = 0;
-        Graphite.Connection.DASHED = 1;
-        Graphite.Connection.DOTTED = 2;
 	}
 )();
 

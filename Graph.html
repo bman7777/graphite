@@ -5,79 +5,147 @@
     <link rel="SHORTCUT ICON" href="http://www.local-binary.com/root/img/web/localbinaryicon.ico" />
     <link rel="stylesheet" type="text/css" href="Graph.css">
     
-    <script src="kinetic-v5.1.0.min.js"></script>
-    <script src="util.js"></script>
-    <script src="builder.js"></script>
-    <script src="node.js"></script>
-    <script src="nodeOptions.js"></script>
-    <script src="shapeFactory.js"></script>
-    <script src="connection.js"></script>
-    <script src="connectionOptions.js"></script>
-    <script src="lineFactory.js"></script>
-    <script src="menu.js"></script>
-    <script src="fileOptions.js"></script>
-    <script src="menuConfig.js"></script>
-    <script src="popup.js"></script>
-    <script src="messager.js"></script>
-    <script src="cookieControl.js"></script>
     <script>
         var WINDOW_GUTTER = 25;
         var builder;
-        var shapeSettings;
-        var apiTypesToLoad = [{name:"auth", isLoaded:false}, {name: "picker", isLoaded:false}];
-        var clientIsLoaded = false;
-        var allApisAreLoaded = false;
+        var fileOptions;
+        var menu;
         
-        function onClientStartLoad()
+        var DEP_NONE = 0;
+        var DEP_KINETIC = 1;
+        var DEP_UTIL = 2;
+        var DEP_BUILDER = 4;
+        var DEP_NODE = 8;
+        var DEP_NODE_OPTIONS = 16;
+        var DEP_SHAPE_FACTORY = 32;
+        var DEP_CONNECTION = 64;
+        var DEP_CONN_OPTIONS = 128;
+        var DEP_LINE_FACTORY = 256;
+        var DEP_MENU = 512;
+        var DEP_FILE_OPTIONS = 1024;
+        var DEP_MENU_CONFIG = 2048;
+        var DEP_POPUP = 4096;
+        var DEP_MESSAGER = 8192;
+        var DEP_COOKIE_CONTROL = 16384;
+        var DEP_GOOGLE_CLIENT = 32768;
+        var DEP_GOOGLE_API = 65536;
+        var DEP_GOOGLE_API_AUTH = 131072;
+        var DEP_GOOGLE_API_PICKER = 262144;
+        var DEP_FONTS = 524288;
+        
+        var scriptDependency = new Array();
+        var dependencyMask = DEP_NONE;
+        
+        function dependencyFinalized(scriptObj)
         {
-            gapi.client.load('drive', 'v2', function()
-            {
-                clientIsLoaded = true;
+            // console.log("DEPENDENCY LOADED: "+scriptObj.res);
+            scriptObj.isLoaded = true;
+            dependencyMask = dependencyMask|scriptObj.type;
                 
-                if(builder != undefined)
-                {
-                    builder.setClientIsLoaded();
-                }
-            });
+            loadDependencies();
         }
         
-        function onApiLoadComplete(apiLoadObj)
+        function getScriptObjForDependency(depType)
         {
-            apiLoadObj.isLoaded = true;
-            
-            var allAreLoaded = true;
-            for(var i = 0; i < apiTypesToLoad.length; i++)
+            var scriptObj;
+            var numDep = scriptDependency.length;
+            for(var i = 0; i < numDep; i++)
             {
-                if(apiTypesToLoad[i].isLoaded != true)
+                if(scriptDependency[i].type == depType)
                 {
-                    allAreLoaded = false;
+                    scriptObj = scriptDependency[i];
                     break;
                 }
             }
             
-            if(allAreLoaded)
+            return scriptObj;
+        }
+        
+        function dependencyLoaded(depType)
+        {
+            var scriptObj = getScriptObjForDependency(depType);
+            if(scriptObj.callback != undefined)
             {
-                allApisAreLoaded = true;
-                var clientLib = document.createElement('script');
-                clientLib.setAttribute("src", "https://apis.google.com/js/client.js?onload=onClientStartLoad");
-                document.getElementsByTagName("head")[0].appendChild(clientLib);
-                
-                if(builder != undefined)
+                scriptObj.callback(dependencyFinalized.bind(this, scriptObj));
+            }
+            else
+            {
+                dependencyFinalized(scriptObj);
+            }
+        }
+        
+        function loadDependencies()
+        {
+            var headTag = document.getElementsByTagName("head")[0];
+            var numDep = scriptDependency.length;
+            for(var i = 0; i < numDep; i++)
+            {
+                var scriptObj = scriptDependency[i];
+                if((scriptObj.isStarted != true) &&
+                   (scriptObj.dependency & dependencyMask) == scriptObj.dependency)
                 {
-                    builder.setApiIsLoaded();
+                    scriptObj.isLoaded = false;
+                    scriptObj.isStarted = true;
+                    
+                    if(scriptObj.res != "" && scriptObj.res != undefined)
+                    {
+                        var scriptLink = document.createElement('script');
+                        scriptLink.onload = dependencyLoaded.bind(this, scriptObj.type);
+                        scriptLink.async = true;
+                        scriptLink.src = scriptObj.res;
+                        headTag.appendChild(scriptLink);
+                    }
+                    else
+                    {
+                        scriptObj.callback(dependencyFinalized.bind(this, scriptObj));
+                    }
                 }
             }
         }
         
-        function onStartApiLoad()
+        function loadClient()
         {
-            for(var i = 0; i < apiTypesToLoad.length; i++)
-            { 
-                gapi.load(apiTypesToLoad[i].name, {callback: onApiLoadComplete.bind(this, apiTypesToLoad[i])});
-            }
+            dependencyFinalized(getScriptObjForDependency(DEP_GOOGLE_CLIENT));
         }
         
-        function initializeGraphite()
+        function loadApi()
+        {
+            dependencyFinalized(getScriptObjForDependency(DEP_GOOGLE_API));
+        }
+        
+        function loadAuth(callback)
+        {
+            gapi.load('auth', {callback: callback});
+        }
+        
+        function loadPicker(callback)
+        {
+            gapi.load('picker', {callback: callback});
+        }
+        
+        function loadFile(callback)
+        {
+            fileOptions = new Graphite.FileOptions(builder);
+            builder.setFileOptions(fileOptions);
+            
+            callback();
+        }
+        
+        function menuCallback(event, param)
+        {
+            builder.processMenuEvent(event, param);
+        }
+        
+        function loadMenu(callback)
+        {
+            // menuCallback exists separately in case the builder isn't ready yet
+            menu = new Graphite.Menu('menu', menuCallback);
+            Graphite.MenuConfig.Create(menu);
+            
+            callback();
+        }
+        
+        function loadBuilder(callback)
         {
             builder = new Graphite.Builder(
             {
@@ -85,11 +153,18 @@
                 width: window.innerWidth-WINDOW_GUTTER,
                 height: window.innerHeight-WINDOW_GUTTER,
                 popup: new Graphite.Popup('popup', 'popupScrim'),
-                messagerMount: 'messager',
-                apiIsLoaded: allApisAreLoaded,
-                clientIsLoaded: clientIsLoaded
+                messagerMount: 'messager'
             });
+            
+            callback();
         }
+        
+        WebFontConfig = 
+        {
+            google: { families: ['Permanent Marker'] },
+            fontactive: function () { dependencyLoaded(DEP_FONTS); },
+            fontinactive: function () { dependencyLoaded(DEP_FONTS); }
+        };
         
         window.onresize = function(event) 
         {
@@ -99,40 +174,44 @@
             }
         };
         
-        function buildMenu(mountId, builder)
-        {
-            var root = GraphiteMenu.createRootMenu(mountId, builder);
-            GraphiteMenu.CONFIG(root);
-        }
-        
-        function beginGraphite()
-        {
-            initializeGraphite();
-            buildMenu("menu", builder);
-        }
-        
-        WebFontConfig = 
-        {
-            google: { families: ['Permanent Marker'] },
-            fontactive: function () { beginGraphite(); },
-            fontinactive: function () { beginGraphite(); }
-        };
-
-        (function() 
-        {
-            var wf = document.createElement('script');
-            wf.src = 'webfont-v1-google.js';
-            wf.type = 'text/javascript';
-            wf.async = 'true';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(wf, s);
-        })();
+        // ------------------------------------------     SCRIPT DEPENDENCIES    ------------------------------------------------------
+        scriptDependency.push({res:"kinetic-v5.1.0.min.js",                 type:DEP_KINETIC,           dependency:DEP_NONE});
+        scriptDependency.push({res:"util.js",                               type:DEP_UTIL,              dependency:DEP_NONE});
+        scriptDependency.push({res:"builder.js",                            type:DEP_BUILDER,           dependency:
+            DEP_KINETIC|DEP_UTIL|DEP_NODE|DEP_NODE_OPTIONS|DEP_SHAPE_FACTORY|DEP_CONNECTION|DEP_CONN_OPTIONS|DEP_LINE_FACTORY|DEP_POPUP|DEP_MESSAGER|DEP_FONTS,
+            callback:loadBuilder});
+        scriptDependency.push({res:"node.js",                               type:DEP_NODE,              dependency:DEP_KINETIC});
+        scriptDependency.push({res:"nodeOptions.js",                        type:DEP_NODE_OPTIONS,      dependency:DEP_KINETIC});
+        scriptDependency.push({res:"shapeFactory.js",                       type:DEP_SHAPE_FACTORY,     dependency:DEP_KINETIC});
+        scriptDependency.push({res:"connection.js",                         type:DEP_CONNECTION,        dependency:DEP_KINETIC});
+        scriptDependency.push({res:"connectionOptions.js",                  type:DEP_CONN_OPTIONS,      dependency:DEP_KINETIC});
+        scriptDependency.push({res:"lineFactory.js",                        type:DEP_LINE_FACTORY,      dependency:DEP_KINETIC});
+        scriptDependency.push({res:"menu.js",                               type:DEP_MENU,              dependency:
+            DEP_MENU_CONFIG,
+            callback:loadMenu});
+        scriptDependency.push({res:"fileOptions.js",                        type:DEP_FILE_OPTIONS,      dependency:
+            DEP_BUILDER|DEP_GOOGLE_CLIENT|DEP_GOOGLE_API|DEP_GOOGLE_API_AUTH|DEP_GOOGLE_API_PICKER,
+            callback:loadFile});
+        scriptDependency.push({res:"menuConfig.js",                         type:DEP_MENU_CONFIG,       dependency:DEP_NONE});
+        scriptDependency.push({res:"popup.js",                              type:DEP_POPUP,             dependency:DEP_NONE});
+        scriptDependency.push({res:"messager.js",                           type:DEP_MESSAGER,          dependency:DEP_NONE});
+        scriptDependency.push({res:"cookieControl.js",                      type:DEP_COOKIE_CONTROL,    dependency:DEP_NONE});
+        scriptDependency.push({res:"",                                      type:DEP_GOOGLE_API_AUTH,   dependency:
+            DEP_GOOGLE_CLIENT,
+            callback:loadAuth});
+        scriptDependency.push({res:"",                                      type:DEP_GOOGLE_API_PICKER, dependency:
+            DEP_GOOGLE_CLIENT,
+            callback:loadPicker});
+        scriptDependency.push({res:"https://apis.google.com/js/client.js?onload=loadClient",    type:DEP_GOOGLE_CLIENT, dependency:
+            DEP_GOOGLE_API,
+            callback:function() {}});
+        scriptDependency.push({res:"https://apis.google.com/js/api.js?onload=loadApi",          type:DEP_GOOGLE_API,    dependency:DEP_NONE,
+            callback:function() {}});
+        scriptDependency.push({res:"http://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js", type:DEP_FONTS,         dependency:DEP_NONE});
     </script>
-    <script src="https://apis.google.com/js/api.js?onload=onStartApiLoad"></script>
     
 </head>
-<body style="background-image:url('img/web/graphtile-new.png')"
-      oncontextmenu="return false;">
+<body style="background-image:url('img/web/graphtile-new.png')" oncontextmenu="return false;" onload="loadDependencies()">
     
     <div id="container"></div>
     <div id="messager" class="MessagerContainer"></div>

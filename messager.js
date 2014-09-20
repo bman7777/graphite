@@ -51,7 +51,7 @@ if(this.Graphite == null)
             
             this._changeFileName = function()
             {
-                this._builder.processFile(Graphite.FileOptions.NEW);
+                this._builder.processFile(Graphite.MenuConfig.FILE_NEW);
             };
             
             this.refreshGoBack = function(show, callback)
@@ -86,7 +86,7 @@ if(this.Graphite == null)
                     status.style.animation = "statusIn 0.7s ease-in";
                     status.style.webkitAnimation = "statusIn 0.7s ease-in";
                     
-                    this._statusIntervalId = setInterval(this._nextMessage.bind(this), 2500);
+                    this._statusIntervalId = setInterval(this._nextMessage.bind(this), 1400);
                 }
             };
             

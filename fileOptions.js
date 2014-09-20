@@ -8,25 +8,18 @@ if(this.Graphite == null)
     // -- FILE-OPTIONS definition
     function()
     {
-        Graphite.FileOptions = function(builder, messager, cookieControl, apiIsLoaded, clientIsLoaded)
+        Graphite.FileOptions = function(builder)
         {
             this._builder = builder;
-            this._messager = messager;
-            this._cookieControl = cookieControl;
+            this._messager = builder.getMessager();
+            this._cookieControl = builder.getCookie();
             this._fileStackCookieDelim = "--stack--";
             this._fileStackType = "fileId";
             this._statusOK = 200;
-            this._apiIsLoaded = apiIsLoaded != false;
-            this._clientIsLoaded = clientIsLoaded != false;
+            this._isDriveLoaded = false;
             
             this._checkAuthorization = function(immediate, callback) 
             {
-                if(!this._apiIsLoaded)
-                {
-                    // don't even try to authorize if api isn't ready
-                    return;
-                }
-                
                 if(immediate == true || this._isAuthorized != true)
                 {
                     // as a sanity check- blank these out while we refresh them
@@ -60,12 +53,28 @@ if(this.Graphite == null)
                     this._isAuthorized = true;
                     this._authToken = authResult.access_token;
                     
-                    if(callback) callback();
+                    if(!this._isDriveLoaded)
+                    {
+                        gapi.client.load('drive', 'v2', this._delayedGoogleDriveLoad.bind(this, callback));
+                    }
+                    else if(callback) callback();
                 }
                 else
                 {
                     this._isAuthorized = false;
                     this._authToken = undefined;
+                }
+            };
+            
+            // need to delay the load for some reason, because Google Drive tends to 
+            // fail when using it immediately
+            this._delayedGoogleDriveLoad = function(callback)
+            {
+                this._isDriveLoaded = true;
+                
+                if(callback)
+                {
+                    window.setTimeout(callback, 10);
                 }
             };
             
@@ -178,12 +187,10 @@ if(this.Graphite == null)
             
             this._onSaveCallback = function(callback, event)
             {
-                if(!this._clientIsLoaded)
+                if(this._isFileNameValid(this._filename) || this._onSelectFileName(event))
                 {
-                    return false;
-                }
-                else if(this._isFileNameValid(this._filename) || this._onSelectFileName(event))
-                {
+                    this._messager.showMessage("Saving...");
+                    
                     var doc = this._builder.toXML();
                     
                     const boundary = "gapi.client.request-Multipart-Boundary";
@@ -231,34 +238,35 @@ if(this.Graphite == null)
             
             this._onSaveSuccess = function(callback, event)
             {
-                this._messager.showMessage("Save Succeeded");
-                
-                // todo: error handling?
-                
-                this._currentFileId = event.id;
-                this._link = event.downloadUrl;
-                
-                // do whatever comes next if we can
-                if(callback != null)
+                if(event.code == this._statusOK || event.code == undefined)
                 {
-                    callback();
+                    this._messager.showMessage("Save Succeeded");
+                    this._currentFileId = event.id;
+                    this._link = event.downloadUrl;
+                    
+                    // do whatever comes next if we can
+                    if(callback != null)
+                    {
+                        callback();
+                    }
+                }
+                else
+                {
+                    this._messager.showMessage("Error Saving");
                 }
             };
             
             this._createPicker = function(callback)
             {
-                if(this._apiIsLoaded)
-                {
-                    var view = new google.picker.View(google.picker.ViewId.DOCS);
-                    view.setMimeTypes("text/xml");
-                    
-                    var picker = new google.picker.PickerBuilder()
-                        .setOAuthToken(this._authToken)
-                        .addView(view)
-                        .setCallback(callback)
-                        .build();
-                     picker.setVisible(true);
-                }
+                var view = new google.picker.View(google.picker.ViewId.DOCS);
+                view.setMimeTypes("text/xml");
+                
+                var picker = new google.picker.PickerBuilder()
+                    .setOAuthToken(this._authToken)
+                    .addView(view)
+                    .setCallback(callback)
+                    .build();
+                 picker.setVisible(true);
             };
             
             this.openFile = function(fileId, closePreviousCallback)
@@ -304,10 +312,7 @@ if(this.Graphite == null)
             
             this._onOpenFileAuthorizationReady = function(fileId, closePreviousCallback)
             {
-                if(!this._clientIsLoaded)
-                {
-                    return;
-                }
+                this._messager.showMessage("Opening...");
                 
                 var request = gapi.client.request(
                 {
@@ -356,6 +361,10 @@ if(this.Graphite == null)
                             // this is not a graphite file, just open it in code editor
                             this._onLoadNonGraphiteFile(resp.downloadUrl);
                         }
+                    }
+                    else
+                    {
+                        this._messager.showMessage("Error Opening");
                     }
                 }.bind(this));
             };
@@ -407,10 +416,7 @@ if(this.Graphite == null)
             
             this._onLoadFileId = function(fileId, loadCompleteCallback)
             {
-                if(!this._clientIsLoaded)
-                {
-                    return;
-                }
+                this._messager.showMessage("Loading...");
                 
                 var request = gapi.client.drive.files.get(
                 {
@@ -450,18 +456,11 @@ if(this.Graphite == null)
                         }.bind(this);
                         xhr.send();
                     }
+                    else
+                    {
+                        this._messager.showMessage("Error Loading");
+                    }
                 }.bind(this));
-            };
-            
-            this.setApiIsLoaded = function()
-            {
-                var wasLoaded = this._apiIsLoaded;
-                this._apiIsLoaded = true;
-                
-                if(!wasLoaded)
-                {
-                    this._checkAuthorization(true);
-                }
             };
             
             this._autoLoadFromCookie = function()
@@ -475,27 +474,15 @@ if(this.Graphite == null)
                 }
             };
             
-            this.setClientIsLoaded = function()
-            {
-                this._clientIsLoaded = true;
-                this._autoLoadFromCookie();
-            };
-            
-            // if we have an api instantly loaded, then check auth now
-            if(this._apiIsLoaded)
-            {
-                this._checkAuthorization(true);
-            }
+            // check auth now for the first time
+            this._checkAuthorization(true);
             
             // initialize to "Untitled", but still attempt to load the last 
             // cookie file-- we can't rely on it succeeding though 
             this._messager.setFileName("Untitled");
             
             // if we have a cookie, load up whatever is at the top of the stack
-            if(this._clientIsLoaded)
-            {
-                this._autoLoadFromCookie();
-            }
+            this._autoLoadFromCookie();
             
             // as we are leaving the page we should push our current file
             // so when we return we are looking at the correct file.  We 
@@ -508,10 +495,6 @@ if(this.Graphite == null)
                 }
             }.bind(this));
         };
-        
-        Graphite.FileOptions.NEW = 0;
-        Graphite.FileOptions.SAVE = 1;
-        Graphite.FileOptions.LOAD = 2;
     }
 )();
 
