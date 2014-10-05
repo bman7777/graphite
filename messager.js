@@ -86,7 +86,7 @@ if(this.Graphite == null)
                     status.style.animation = "statusIn 0.7s ease-in";
                     status.style.webkitAnimation = "statusIn 0.7s ease-in";
                     
-                    this._statusIntervalId = setInterval(this._nextMessage.bind(this), 1400);
+                    this._statusIntervalId = setInterval(this._nextMessage.bind(this), 1100);
                 }
             };
             

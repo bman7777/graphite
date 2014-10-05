@@ -12,8 +12,8 @@ if(this.Graphite == null)
             this._canvas = document.getElementById(stageProps.container);
             
             // all layers will be added to the stage
-            var stage = new Kinetic.Stage(stageProps);
-            stage.getContent().addEventListener('mousedown', function(event) 
+            this._stage = new Kinetic.Stage(stageProps);
+            this._stage.getContent().addEventListener('mousedown', function(event) 
             {
                 // right clicking the canvas will clear the drawing state 
                 if(event.which != 1)
@@ -27,11 +27,11 @@ if(this.Graphite == null)
             
             // connections should be under shapes, so add those first
             this._connectionLayer = new Kinetic.Layer();
-            stage.add(this._connectionLayer);
+            this._stage.add(this._connectionLayer);
             
             // next add nodes
             this._nodeLayer = new Kinetic.Layer();
-            stage.add(this._nodeLayer);
+            this._stage.add(this._nodeLayer);
             
             this._cookieControl = new Graphite.CookieControl(this);
             this._messager = new Graphite.Messager(stageProps.messagerMount, this);
@@ -87,8 +87,8 @@ if(this.Graphite == null)
             // when the window is resized, change the stage size accordingly
             this.updateSize = function(width, height)
             {
-                stage.setWidth(width);
-                stage.setHeight(height);
+                this._stage.setWidth(width);
+                this._stage.setHeight(height);
             };
             
             this.getState = function()
@@ -486,7 +486,47 @@ if(this.Graphite == null)
                 this.enterSelectionState();
                 
                 // redraw the deleted change(s)
-                this._connectionLayer.draw();  
+                this._connectionLayer.draw();
+            };
+            
+            this.toPNG = function(callback)
+            {
+                var BUFFER = 100;
+                var rightMostEdge = -1;
+                var bottomMostEdge = -1;
+                var leftMostEdge = this._stage.width();
+                var topMostEdge = this._stage.height();
+                
+                var listChildren = this._nodeLayer.getChildren();
+                for(var i = listChildren.length - 1; i >= 0; i--)
+                {
+                    var node = listChildren[i];
+                    
+                    var nodeRightEdge = node.x() + BUFFER;
+                    var nodeBottomEdge = node.y() + BUFFER;
+                    var nodeLeftEdge = node.x() - BUFFER;
+                    var nodeTopEdge = node.y() - BUFFER;
+                    
+                    if(nodeRightEdge > rightMostEdge) rightMostEdge = nodeRightEdge;
+                    if(nodeBottomEdge > bottomMostEdge) bottomMostEdge = nodeBottomEdge;
+                    if(nodeLeftEdge < leftMostEdge) leftMostEdge = nodeLeftEdge;
+                    if(nodeTopEdge < topMostEdge) topMostEdge = nodeTopEdge;
+                }
+                
+                // sanity check all the findings
+                if(rightMostEdge <= 0) rightMostEdge = this._stage.width();
+                if(bottomMostEdge <= 0) bottomMostEdge = this._stage.height();
+                if(leftMostEdge >= rightMostEdge) leftMostEdge = 0;
+                if(topMostEdge >= bottomMostEdge) topMostEdge = 0;
+                
+                return this._stage.toDataURL({
+                    mimeType: "image/png",
+                    x: leftMostEdge,
+                    y: topMostEdge,
+                    width: (rightMostEdge - leftMostEdge),
+                    height: (bottomMostEdge - topMostEdge),
+                    callback: callback
+                });
             };
             
             this.toXML = function()

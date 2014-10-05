@@ -38,7 +38,7 @@ if(this.Graphite.MenuConfig == null)
                 },
                 {
                     title:"Open",
-                    iconImg:"img/web/open.gif",
+                    iconImg:"img/web/open.png",
                     desc:"Open a Graph",
                     type:Graphite.MenuConfig.FILE_LOAD,
                     category:Graphite.MenuConfig.CATEGORY_FILE
@@ -67,7 +67,7 @@ if(this.Graphite.MenuConfig == null)
                 },
                 {
                     title:"Square",
-                    iconImg:"img/web/square.gif",
+                    iconImg:"img/web/square.png",
                     desc:"Draw a Square",
                     type:Graphite.MenuConfig.SHAPE_SQUARE,
                     category:Graphite.MenuConfig.CATEGORY_NODE

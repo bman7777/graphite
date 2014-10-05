@@ -13,7 +13,6 @@ if(this.Graphite == null)
             this._builder = builder;
             this._messager = builder.getMessager();
             this._cookieControl = builder.getCookie();
-            this._fileStackCookieDelim = "--stack--";
             this._fileStackType = "fileId";
             this._statusOK = 200;
             this._isDriveLoaded = false;
@@ -96,7 +95,7 @@ if(this.Graphite == null)
                     onClickCallback:this._onNamedFile.bind(this, false)});
                 buttons.push({id:'cancelButton', text:'Cancel', desc:"Don't create a new file"});
                 
-                this._builder.openPopup("Name File", settings, buttons);
+                this._builder.openPopup("Name New File", settings, buttons);
             };
             
             this._onNamedFile = function(isNewFile, event)
@@ -190,44 +189,57 @@ if(this.Graphite == null)
                 if(this._isFileNameValid(this._filename) || this._onSelectFileName(event))
                 {
                     this._messager.showMessage("Saving...");
-                    
-                    var doc = this._builder.toXML();
-                    
-                    const boundary = "gapi.client.request-Multipart-Boundary";
-                    const requestBody = 
-                        "--"+boundary+"\n"+
-                        "Content-Type: application/json; charset=UTF-8\n\n"+
-                            "{\n"+
-                            "    'title': '"+this._filename+".xml'\n"+
-                            "}\n"+
-                         "\n--"+boundary+"\n"+
-                         "Content-Type: text/xml\n\n"+
-                         doc+"\n"+
-                         "\n--"+boundary+"--";
-                    
-                    var requestPath = "/upload/drive/v2/files";
-                    var requestMethod = "POST";
-                    if(this._currentFileId != undefined)
+                    this._builder.toPNG(function(thumbnail)
                     {
-                        requestPath += "/"+this._currentFileId;
-                        requestMethod = "PUT";
-                    }
-                    
-                    var request = gapi.client.request(
-                    {
-                        'path': requestPath,
-                        'method': requestMethod,
-                        'params': {'uploadType': 'multipart'},
-                        'headers': 
+                        thumbnail = thumbnail.split("base64,")[1].replace(
+                            /\+/g, '-').replace(/\//g, '_');
+                                
+                                
+                                ///[/]/g, "_").replace(/[+]/g, "-").replace(/[=]/g, "*");
+                        
+                        var doc = this._builder.toXML();
+                        const boundary = "gapi.client.request-Multipart-Boundary";
+                        const requestBody = 
+                            "--"+boundary+"\n"+
+                            "Content-Type: application/json; charset=UTF-8\n\n"+
+                                "{\n"+
+                                "    'title': '"+this._filename+".xml',\n"+
+                                "    'mimeType': 'text/xml',\n"+
+                                "    'thumbnail': {\n"+
+                                "        'image': '"+thumbnail+"',\n"+
+                                "        'mimeType': 'image/png'\n"+
+                                "     }\n"+
+                                "}\n"+
+                             "\n--"+boundary+"\n"+
+                             "Content-Type: text/xml\n\n"+
+                             doc+"\n"+
+                             "\n--"+boundary+"--";
+                        
+                        var requestPath = "/upload/drive/v2/files";
+                        var requestMethod = "POST";
+                        if(this._currentFileId != undefined)
                         {
-                            'Content-Type': 'multipart/related; boundary="' + boundary + '"',
-                            'Authorization': 'Bearer '+ this._authToken
-                        },
-                        'body': requestBody
-                    });
+                            requestPath += "/"+this._currentFileId;
+                            requestMethod = "PUT";
+                        }
+                        
+                        var request = gapi.client.request(
+                        {
+                            'path': requestPath,
+                            'method': requestMethod,
+                            'params': {'uploadType': 'multipart'},
+                            'headers': 
+                            {
+                                'Content-Type': 'multipart/related; boundary="' + boundary + '"',
+                                'Authorization': 'Bearer '+ this._authToken
+                            },
+                            'body': requestBody
+                        });
+                        
+                        this._lastSavedFileContent = doc.trim();
+                        request.execute(this._onSaveSuccess.bind(this, callback));
+                    }.bind(this));
                     
-                    this._lastSavedFileContent = doc.trim();
-                    request.execute(this._onSaveSuccess.bind(this, callback));
                     return true;
                 }
                 else

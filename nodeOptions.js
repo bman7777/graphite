@@ -3,7 +3,7 @@ if(this.Graphite == null)
 {
     this.Graphite = {};
 }
-	
+
 (
     // -- NODE-OPTIONS definition
     function()
@@ -29,7 +29,7 @@ if(this.Graphite == null)
                 // only hide the options when clicking on the node and not on the options themselves
                 event.cancelBubble = true;
             });
-    
+            
             this.getBackground = function()
             {
                 return this._background;
@@ -253,8 +253,6 @@ if(this.Graphite == null)
             {
                 modifiedNode.getShape().fill(document.getElementById('colorInput').value);
                 modifiedNode.text(document.getElementById('nameInput').value);
-                
-                // TODO: save off file link
                 
                 modifiedNode.cache();
                 modifiedNode.draw();
