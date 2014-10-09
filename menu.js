@@ -76,11 +76,13 @@ if(this.Graphite == null)
                             icons[i].id = icons[i].title+"Icon";
                             
                             subMenu += "<td class='subMenuIcon' id='"+icons[i].id+"'";
-                            subMenu +=     " onclick=\"Graphite.Menu.ItemClickEvent("+icons[i].category+", "+icons[i].type+")\"";
+                            subMenu +=     " onclick=\"Graphite.Menu.ItemClickEvent("+icons[i].category+", {type: "+icons[i].type+"})\"";
                             subMenu +=     " onmouseover=\"Graphite.Menu.HighlightSubMenuIcon('"+icons[i].highlightId+"')\"";
                             subMenu +=     " onmouseout=\"Graphite.Menu.UnHighlightSubMenuIcon('"+icons[i].highlightId+"')\">";
                             subMenu +=         "<a href='#' title='"+icons[i].desc+"'>";
-                            subMenu +=             "<div class='subMenuIconHighlight' id='"+icons[i].highlightId+"' style=\"background-image:url('"+icons[i].iconImg+"');\"></div>";
+                            subMenu +=             "<div class='subMenuIconHighlight' id='"+icons[i].highlightId+"'";
+                            subMenu +=                 " style=\"background-image:url('"+icons[i].iconImg+"');\">";
+                            subMenu +=             "</div>";
                             subMenu +=         "</a>";
                             subMenu += "</td>";
                         }
@@ -100,6 +102,30 @@ if(this.Graphite == null)
                     subMenu += "<tr></tr></table></td></tr>";
                     
                     this._root.innerHTML += subMenu;
+                    
+                    var menu = document.getElementById(mountId);
+                    menu.addEventListener('touchstart', function(icons, event)
+                    {
+                        var target = event.target || event.srcElement;
+                        for(var i = 0; i < icons.length; i++)
+                        {
+                            var iconInfo = icons[i];
+                            if(target.id == iconInfo.highlightId)
+                            {
+                                event.cancelBubble = true;
+                                event.preventDefault();
+                                event.stopPropagation();
+                                
+                                Graphite.Menu.ItemClickEvent(iconInfo.category, 
+                                {
+                                    type: iconInfo.type, 
+                                    targetTouches: event.targetTouches, 
+                                    target: target //menu
+                                });
+                                break;
+                            }
+                        }
+                    }.bind(this, icons));
                 }
             };
             
@@ -111,7 +137,7 @@ if(this.Graphite == null)
             }
         };
         // when a submenu is clicked, activate its action
-        Graphite.Menu.ItemClickEvent = function(category, type)
+        Graphite.Menu.ItemClickEvent = function(category, param)
         {
             // make sure we aren't building two things at once
             Graphite.Menu.BuilderCallback("clearUnfinishedBuilding");
@@ -120,21 +146,21 @@ if(this.Graphite == null)
             {
                 case Graphite.MenuConfig.CATEGORY_NODE:
                     // attempt to add something of the given type
-                    Graphite.Menu.BuilderCallback("addNode", type);
+                    Graphite.Menu.BuilderCallback("addNode", param);
                     break;
                 
                 case Graphite.MenuConfig.CATEGORY_CONNECTION:
                     // this will setup the potential for a new line
-                    Graphite.Menu.BuilderCallback("addConnection", type);
+                    Graphite.Menu.BuilderCallback("addConnection", param);
                     break;
                     
                 case Graphite.MenuConfig.CATEGORY_FILE:
                     // this will setup a save or load
-                    Graphite.Menu.BuilderCallback("processFile", type);
+                    Graphite.Menu.BuilderCallback("processFile", param);
                     break;
                     
                 default:
-                    Graphite.Menu.BuilderCallback("selection");
+                    Graphite.Menu.BuilderCallback("selection", param);
                     break;
             }
         };

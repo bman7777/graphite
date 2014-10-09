@@ -25,6 +25,18 @@ if(this.Graphite == null)
                 }
             }.bind(this));
             
+            this._stage.getContent().addEventListener('touchcancel', function(event) 
+            {
+                if(this._pendingConnection != null)
+                {
+                    // disrupted touch means that we are clearing draw state 
+                    this.clearUnfinishedBuilding();
+                        
+                    // we are in selecting mode now
+                    this.enterSelectionState();
+                }
+            }.bind(this));
+            
             // connections should be under shapes, so add those first
             this._connectionLayer = new Kinetic.Layer();
             this._stage.add(this._connectionLayer);
@@ -164,9 +176,10 @@ if(this.Graphite == null)
             // move the node as the mouse moves
             this._moveNodeIntoPlace = function(event)
             {
-                var pos = { x:event.clientX, y:event.clientY };
-                this._pendingNode.setX(pos.x);
-                this._pendingNode.setY(pos.y);
+                var touch = event.targetTouches != undefined ? event.targetTouches[0] : undefined;
+                
+                this._pendingNode.setX(touch != undefined ? touch.clientX : event.clientX);
+                this._pendingNode.setY(touch != undefined ? touch.clientY : event.clientY);
                 
                 // must be a layer draw so we don't see a trail as we drag
                 this._nodeLayer.draw();
@@ -179,8 +192,15 @@ if(this.Graphite == null)
                     this._canvasListeners = new Array();
                 }
                 
-                this._canvasListeners.push({callback: callback, type: eventType});
-                this._canvas.addEventListener(eventType, callback, false);
+                var events = eventType.split(" ");
+                for(var i = 0; i < events.length; i++)
+                {
+                    if(events[i] != "")
+                    {
+                        this._canvasListeners.push({callback: callback, type: events[i]});
+                        this._canvas.addEventListener(events[i], callback, false);
+                    }
+                }
             };
             
             this._removeAllCanvasListeners = function()
@@ -196,9 +216,9 @@ if(this.Graphite == null)
                 }
             };
             
-            this.processFile = function(type, param)
+            this.processFile = function(param)
             {
-                switch(type)
+                switch(param.type)
                 {
                     case Graphite.MenuConfig.FILE_NEW:
                         this._fileOptions.newFile();
@@ -215,10 +235,14 @@ if(this.Graphite == null)
             };
             
             // being the process of placing a node- follow node with mouse until click
-            this.addNode = function(type)
+            this.addNode = function(param)
             {
                 // if we were pending something, we should start over fresh
                 this._cancelAddNode();
+                
+                // make sure the pending node is shown above everything
+                // so it doesn't get blocked dragging against menu
+                this._stage.getContent().style.zIndex = "30";
                 
                 // we are in connection state now
                 this._buildState = Graphite.MenuConfig.STATE_NODE;
@@ -227,15 +251,21 @@ if(this.Graphite == null)
                 this._canvas.style.cursor = "pointer";
                 
                 var pos = { x: 0, y: 0};
-                if(window.event != undefined)
+                var touch = event.targetTouches != undefined ? event.targetTouches[0] : undefined;
+                if(touch != undefined)
+                {
+                    pos.x = touch.clientX;
+                    pos.y = touch.clientY;
+                }
+                else if(window.event != undefined)
                 {
                     pos.x = window.event.clientX;
                     pos.y = window.event.clientY;
                 }
                 
                 // keep track of this node until we finalize (place it)
-                var shape = this._nodeFactory.createShape({type: type});
-                var options = this._nodeFactory.createOptions(type);
+                var shape = this._nodeFactory.createShape({type: param.type});
+                var options = this._nodeFactory.createOptions(param.type);
                 this._pendingNode = new Graphite.Node(
                 {
                     getState:this.getState.bind(this),
@@ -246,15 +276,50 @@ if(this.Graphite == null)
                 });
                 this._pendingNode.setOpacity(0.5);
                 this._nodeLayer.add(this._pendingNode);
+                this._nodeLayer.draw();
                 
-                this._addCanvasListener('mousemove', function(event) { this._moveNodeIntoPlace(event); }.bind(this));
-                
-                // when click occurs, we are finalized
-                var stopMovingNode = function(event)
+                if(touch != undefined)
                 {
-                    switch(event.evt.which)
+                    var target = param.target;
+                    target.addEventListener('touchmove', this._moveNodeIntoPlace.bind(this));
+                    
+                    var endTouchMove = function(event)
                     {
-                        case 1:
+                        // stop listening for touch moves
+                        target.removeEventListener('touchend', endTouchMove);
+                        target.removeEventListener('touchcancel', endTouchMove);
+                        target.removeEventListener('touchmove', this._moveNodeIntoPlace);
+                        
+                        // now that this node is final, make it opaque
+                        this._pendingNode.setOpacity(1);
+                        
+                        // optimize by caching off node
+                        this._pendingNode.cache();
+                        this._pendingNode.draw();
+                        
+                        // now we are finalized and no need to be 'pending', so kill reference
+                        this._pendingNode = null;
+                        
+                        // this reset some state like pointer type
+                        this.clearUnfinishedBuilding();
+                        
+                        // we are in selecting mode now
+                        this.enterSelectionState();
+                    }.bind(this);
+                    
+                    target.addEventListener('touchend', endTouchMove);
+                    target.addEventListener('touchcancel', endTouchMove);
+                }
+                else
+                {
+                    this._addCanvasListener('mousemove', this._moveNodeIntoPlace.bind(this));
+                
+                    // when click occurs, we are finalized
+                    this._pendingNode.on('mouseup', function(event)
+                    {
+                        this._pendingNode.off('mouseup');
+                        
+                        if(event.evt.which == 1)
                         {
                             // stop listening for mouse moves
                             this._removeAllCanvasListeners();
@@ -269,28 +334,22 @@ if(this.Graphite == null)
                             this._pendingNode = null;
                             
                             // automatically start adding a new node now
-                            this.addNode(type);
-                            
-                            break;
+                            this.addNode(param);
                         }
-                        default:
+                        else
                         {
                             // clear state for our in-progress node
                             this.clearUnfinishedBuilding();
                             
                             // we are in selecting mode now
                             this.enterSelectionState();
-                            break;
                         }
-                    }
-
-                }.bind(this);
-                
-                this._pendingNode.on('mouseup', stopMovingNode);
+                    }.bind(this));
+                }
             };
             
             // being the process of drawing a line when a node is clicked
-            this.readyForNewConnection = function(type)
+            this.readyForNewConnection = function(param)
             {
                 // make sure nothing was in progress already
                 this._cancelNewConnection();
@@ -304,8 +363,17 @@ if(this.Graphite == null)
                 // track line as we move
                 var updateLine = function(event) 
                 {
-                    // the mouse tracking is done here
-                    this._pendingConnection.dragUpdate(event.clientX, event.clientY);
+                    var touch = event.targetTouches != undefined ? event.targetTouches[0] : undefined;
+                    if(touch != undefined)
+                    {
+                        // the touch tracking is done here
+                        this._pendingConnection.dragUpdate(touch.clientX, touch.clientY);
+                    }
+                    else
+                    {
+                        // the mouse tracking is done here
+                        this._pendingConnection.dragUpdate(event.clientX, event.clientY);
+                    }
                     
                     // draw the line shifts external to dragging
                     this._connectionLayer.draw();
@@ -316,12 +384,16 @@ if(this.Graphite == null)
                 {
                     if(event.evt.which == 1)
                     {
-                        endDrawLine(this);
+                        endDrawLine(this, true);
+                    }
+                    else if(event.evt.type == "touchend")
+                    {
+                        endDrawLine(this, false);
                     }
                 };
                 
                 // click on a node when line is pending
-                var endDrawLine = function(endNode) 
+                var endDrawLine = function(endNode, autoStartNewLine) 
                 {
                     if(this._pendingConnectionStart == endNode)
                     {
@@ -329,7 +401,7 @@ if(this.Graphite == null)
                         return;
                     }
                     
-                    // stop updating the line on mouse moves
+                    // stop updating the line on mouse/touch moves
                     this._removeAllCanvasListeners();
                     
                     // track connections
@@ -348,14 +420,25 @@ if(this.Graphite == null)
                         var node = listChildren[i];
                         
                         // stop listening for line ends
-                        node.off('mouseup');
+                        node.off('mouseup touchend');
                         
                         // turn on all dragging of objects
                         node.setDraggable(true);
                     }
                     
-                    // automatically start drawing a new line
-                    this.readyForNewConnection(type);
+                    if(autoStartNewLine)
+                    {
+                        // automatically start drawing a new line
+                        this.readyForNewConnection(param);
+                    }
+                    else
+                    {
+                        // reset things like the mouse cursor
+                        this.clearUnfinishedBuilding();
+                        
+                        // we are in selecting mode now
+                        this.enterSelectionState();
+                    }
                 }.bind(this);
                 
                 // transfer scope from start node to 'this'
@@ -374,12 +457,12 @@ if(this.Graphite == null)
                     {
                         getState:this.getState.bind(this),
                         start:this._pendingConnectionStart, 
-                        type:type,
+                        type:param.type,
                         options: options
                     });
                     this._connectionLayer.add(this._pendingConnection);
                     
-                    this._addCanvasListener('mousemove', updateLine);
+                    this._addCanvasListener('mousemove touchmove', updateLine);
                     
                     var listChildren = this._nodeLayer.getChildren();
                     for(var i = 0; i < listChildren.length; i++)
@@ -387,10 +470,10 @@ if(this.Graphite == null)
                         var node = listChildren[i];
                         
                         // stop listening for line begins
-                        node.off('mouseup');
+                        node.off('mouseup touchstart');
                         
                         // start listening for line ends
-                        node.on('mouseup', nodeClickEnd);
+                        node.on('mouseup touchend', nodeClickEnd);
                     }
 
                 }.bind(this);
@@ -405,7 +488,7 @@ if(this.Graphite == null)
                     node.setDraggable(false);
                     
                     // listen for click on all nodes to start the connection
-                    node.on('mouseup', nodeClickBegin);
+                    node.on('mouseup touchstart', nodeClickBegin);
                 }
             };
             
@@ -428,6 +511,11 @@ if(this.Graphite == null)
             // of a node was in process, cancel it
             this._cancelAddNode = function()
             {
+                // we upped the z-index while we were pending
+                // and now we need to go back to a lower index so the
+                // menu overlaps the nodes again
+                this._stage.getContent().style.zIndex = "auto";
+                
                 // if we were pending something, we should start over fresh
                 if(this._pendingNode != null)
                 {

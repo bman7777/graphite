@@ -16,9 +16,18 @@ a
     background: #559dc9;
 }
 
+#menu
+{
+    position: fixed;
+    top: 130px;
+    left: 15px;
+}
+
 /* ------------- Logo ---------------------*/
 div.home 
 { 
+    position: fixed;
+    top: 15px;
     background-image:url('img/web/localbinary.png'); 
     background-repeat: no-repeat; 
     background-size: contain; 

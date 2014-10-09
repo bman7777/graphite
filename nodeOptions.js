@@ -224,15 +224,26 @@ if(this.Graphite == null)
                             }
                             
                             settings[2] = [{id:'existingFileInput', text:'File:', type:'button', value:label, 
-                                onClickCallback: properties.pickLink.action.bind(this, function(data)
+                                onClickCallback: function(event)
                                 {
-                                    if (data.action == google.picker.Action.PICKED)
+                                    var target = event.target || event.srcElement;
+                                    properties.pickLink.action(function(target, data)
                                     {
-                                        node.linkName(data.docs[0].name);
-                                        node.link(data.docs[0].id);
-                                    }
-                                })}
-                            ];
+                                        if (data.action == google.picker.Action.PICKED)
+                                        {
+                                            var doc = data.docs[0];
+                                            node.linkName(doc.name);
+                                            node.link(doc.id);
+                                            
+                                            // update the button that showed the file link
+                                            target.value = doc.name;
+                                        }
+                                    }.bind(this, target));
+                                    
+                                    // don't close the popup while we are picking a link
+                                    return false;
+                                }
+                            }];
                             
                             var buttons = 
                             [
