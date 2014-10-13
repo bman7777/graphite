@@ -81,20 +81,6 @@ if(this.Graphite == null)
             // as we drag move something make sure the connections follow the node
             this.on('dragmove', function(event)
             {
-                this._updateNodeDrag(event);
-            });
-            
-            this.on('dragend', function(event)
-            {
-                // there is an optimization temp layer made when dragging
-                // that needs to be deleted when dragging is done or else
-                // all the connection layer events will be hosed.  This 
-                // ancestor draw appears to clean up the temp layer 
-                this.getLayer().getAncestors()[0].draw();
-            });
-            
-            this._updateNodeDrag = function(event)
-            {
                 if(this._connectionList != null)
                 {
                     var drawLayer = null;
@@ -113,7 +99,30 @@ if(this.Graphite == null)
                         drawLayer.draw();
                     }
                 }
-            };
+                
+                // make sure the stage is big enough at all times to 
+                // contain the entirety of the graph
+                var BUFFER = 100;
+                
+                if((this.x() + BUFFER) > this.getStage().getWidth())
+                {
+                    this.getStage().setWidth(this.x() + BUFFER);
+                }
+                
+                if((this.y() + BUFFER) > this.getStage().getHeight())
+                {
+                    this.getStage().setHeight(this.y() + BUFFER);
+                }
+            });
+            
+            this.on('dragend', function(event)
+            {
+                // there is an optimization temp layer made when dragging
+                // that needs to be deleted when dragging is done or else
+                // all the connection layer events will be hosed.  This 
+                // ancestor draw appears to clean up the temp layer 
+                this.getLayer().getAncestors()[0].draw();
+            });
             
             // a new connection to the node- given the connection and the other node
             this.addConnection = function(line, otherEnd)

@@ -165,7 +165,7 @@ if(this.Graphite == null)
                 optionProps.deleteProps.action =  function(node) { builder.removeNode(node); };
                 optionProps.settingsProps.action =  function(title, settings, buttons) { builder.openPopup(title, settings, buttons); };
                 optionProps.contentProps.action =  function(node) { builder.openContent(node); };
-                optionProps.pickLink.action = function(callback) { builder.processFile(Graphite.MenuConfig.FILE_LOAD, callback); };
+                optionProps.pickLink.action = function(callback) { builder.processFile({type: Graphite.MenuConfig.FILE_LOAD, callback: callback}); };
                 
                 switch(type)
                 {

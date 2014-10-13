@@ -11,6 +11,10 @@ if(this.Graphite == null)
         {
             this._canvas = document.getElementById(stageProps.container);
             
+            var WINDOW_GUTTER = 25;
+            stageProps.width = window.innerWidth-WINDOW_GUTTER;
+            stageProps.height = window.innerHeight-WINDOW_GUTTER;
+            
             // all layers will be added to the stage
             this._stage = new Kinetic.Stage(stageProps);
             this._stage.getContent().addEventListener('mousedown', function(event) 
@@ -25,6 +29,8 @@ if(this.Graphite == null)
                 }
             }.bind(this));
             
+            // this is geared towards canceling a line drawing- node
+            // drawing cancellation is below in the file
             this._stage.getContent().addEventListener('touchcancel', function(event) 
             {
                 if(this._pendingConnection != null)
@@ -229,7 +235,7 @@ if(this.Graphite == null)
                         break;
                         
                     case Graphite.MenuConfig.FILE_LOAD:
-                        this._fileOptions.load(param);
+                        this._fileOptions.load(param.callback);
                         break;
                 }
             };
@@ -652,6 +658,10 @@ if(this.Graphite == null)
                 // clear what we have now to start from scratch
                 this.clear();
                 
+                var BUFFER = 100;
+                var rightMostEdge = -1;
+                var bottomMostEdge = -1;
+                
                 var nodeRoot = xmlDoc.getElementsByTagName("nodes")[0];
                 var nodeList = nodeRoot.childNodes;
                 for(var i = 0; i < nodeList.length; i++)
@@ -664,7 +674,18 @@ if(this.Graphite == null)
                     nodeParams.options = this._nodeFactory.createOptions(details.shape.type);
                     
                     this._nodeLayer.add(new Graphite.Node(nodeParams));
+                    
+                    var nodeRightEdge = nodeParams.x + BUFFER;
+                    var nodeBottomEdge = nodeParams.y + BUFFER;
+                    
+                    if(nodeRightEdge > rightMostEdge) rightMostEdge = nodeRightEdge;
+                    if(nodeBottomEdge > bottomMostEdge) bottomMostEdge = nodeBottomEdge;
                 }
+                
+                // make sure the stage is big enough for this graph
+                if(rightMostEdge > this._stage.width()) this._stage.setWidth(rightMostEdge);
+                if(bottomMostEdge > this._stage.height()) this._stage.setHeight(bottomMostEdge);
+                
                 this._nodeLayer.draw();
                 
                 var connectionRoot = xmlDoc.getElementsByTagName("connections")[0];
@@ -742,6 +763,10 @@ if(this.Graphite == null)
                 {
                     this.removeNode(listChildren[i]);
                 }
+                
+                // reset the stage size to not scroll
+                this._stage.setWidth(window.innerWidth-WINDOW_GUTTER);
+                this._stage.setHeight(window.innerHeight-WINDOW_GUTTER);
             };
             
             this.setFileOptions = function(fileOptions)

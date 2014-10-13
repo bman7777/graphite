@@ -6,7 +6,6 @@
     <link rel="stylesheet" type="text/css" href="Graph.css" />
     
     <script>
-        var WINDOW_GUTTER = 25;
         var builder;
         var fileOptions;
         var menu;
@@ -150,8 +149,6 @@
             builder = new Graphite.Builder(
             {
                 container: 'container',
-                width: window.innerWidth-WINDOW_GUTTER,
-                height: window.innerHeight-WINDOW_GUTTER,
                 popup: new Graphite.Popup('popup', 'popupScrim'),
                 messagerMount: 'messager'
             });
@@ -164,14 +161,6 @@
             google: { families: ['Permanent Marker'] },
             fontactive: function () { dependencyLoaded(DEP_FONTS); },
             fontinactive: function () { dependencyLoaded(DEP_FONTS); }
-        };
-        
-        window.onresize = function(event) 
-        {
-            if(builder != null)
-            {
-                builder.updateSize(window.innerWidth-WINDOW_GUTTER, window.innerHeight-WINDOW_GUTTER);
-            }
         };
         
         // ------------------------------------------     SCRIPT DEPENDENCIES    ------------------------------------------------------
