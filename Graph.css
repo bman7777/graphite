@@ -19,8 +19,8 @@ a
 #menu
 {
     position: fixed;
-    top: 130px;
-    left: 15px;
+    top: 140px;
+    left: 13px;
 }
 
 /* ------------- Logo ---------------------*/
@@ -28,12 +28,49 @@ div.home
 { 
     position: fixed;
     top: 15px;
-    background-image:url('img/web/localbinary.png'); 
-    background-repeat: no-repeat; 
-    background-size: contain; 
     width: 100px; 
     height: 117px; 
     margin-left: 15px;
+    border: thick solid;
+    border-width: 5px;
+    border-color: #4e4f4f;
+    background-color: #ffffff;
+}
+
+div.home:hover
+{
+    border-color: transparent;
+    background-color: transparent;
+    box-shadow: 0px 0px 12px #222222;
+}
+
+.local-binary-text-small
+{
+    position: relative;
+    font-family: Arial;
+    line-height: 1em;
+    color: #4e4f4f;
+    font-size: 12px;
+}
+
+.local-binary-text-medium
+{
+    position: relative;
+    font-family: Arial;
+    line-height: 1em;
+    color: #4e4f4f;
+    font-size: 24px;
+    text-shadow:0px 0px 0 rgb(62,63,63), -1px -1px 0 rgb(46,47,47),-2px -2px 1px rgba(0,0,0,0),-2px -2px 1px rgba(0,0,0,0.5),0px 0px 1px rgba(0,0,0,.2);
+}
+
+.local-binary-text-large
+{
+    position: relative;
+    font-family: Arial;
+    line-height: 1em;
+    color: #4e4f4f;
+    font-size: 65px;
+    text-shadow:0px 0px 0 rgb(63,64,64),-1px -1px 0 rgb(48,49,49), -2px -2px 0 rgb(33,34,34),-3px -3px 2px rgba(0,0,0,0.75),-3px -3px 1px rgba(0,0,0,0.5),0px 0px 2px rgba(0,0,0,.2);
 }
 
 /* ------------- Menu ---------------------*/
@@ -110,10 +147,8 @@ div.subMenuIconHighlight
 /* ------------- Popup ---------------------*/
 #popup
 {
-    position: fixed; 
-    top: 20%; 
-    left: 30%; 
-    width: 500px;
+    position: fixed;
+    top: 20%;
     background-color: #ffffff; 
     box-shadow: 5px 5px 5px #888888;
 }

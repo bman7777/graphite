@@ -69,6 +69,27 @@ if(this.Graphite == null)
                 this.getLayer().draw();
             });
             
+            // on touchstart make all nodes cached except this one!
+            // that will allow touch interaction on one node at a time and 
+            // be enabled when attempting to double tap
+            this.on('touchstart', function(event)
+            {
+                if(properties.getState() == Graphite.MenuConfig.STATE_SELECT)
+                {
+                    var listChildren = this.getLayer().getChildren();
+                    for(var i = 0; i < listChildren.length; i++)
+                    {
+                        if(this.id() != listChildren[i].id())
+                        {
+                            listChildren[i].cache();
+                        }
+                    }
+                    
+                    // stop caching this one because we might be about to double tap it
+                    this.clearCache().offset({x:0, y:0});
+                }
+            });
+            
             // as we mouse leave, change node color and size
             this.on('mouseleave', function(event)
             {
@@ -273,18 +294,16 @@ if(this.Graphite == null)
                 });
             };
             
-            this.destroy = function()
-            {
-                this.off("dragmove dblclick mouseenter mouseleave");
-                
-                Kinetic.Group.prototype.destroy.call(this);
-            };
-            
             // listen for opening/closing the options
-            this.on('dblclick', function(event)
+            this.on('dblclick dbltap', function(event)
             {
                 if(properties.getState() == Graphite.MenuConfig.STATE_SELECT)
                 {
+                    // stop caching this one because we might have been using
+                    // a touch mechanism instead of a mouse so we might
+                    // still be cached from earlier
+                    this.clearCache().offset({x:0, y:0});
+                    
                     if(!this._optionDisplay.isShowing())
                     {
                         this._optionDisplay.show(this);
@@ -295,6 +314,13 @@ if(this.Graphite == null)
                     }
                 }
             });
+            
+            this.destroy = function()
+            {
+                this.off("dragmove dblclick dbltap mouseenter mouseleave touchstart");
+                
+                Kinetic.Group.prototype.destroy.call(this);
+            };
             
             Graphite._UNIQUE_NODE_ID++;
         };

@@ -10,10 +10,16 @@ if(this.Graphite == null)
     {
         Graphite.Popup = function(mountId, scrimMountId)
         {
+            var POPUP_WIDTH = 500;
+            
             if(mountId != null)
             {
                 this._container = document.getElementById(mountId);
                 this._container.style.visibility = "hidden";
+                this._container.style.width = ""+POPUP_WIDTH+"px";
+                
+                // if the user zooms in, we need to get as much of the popup as possible to show
+                this._container.style.left = "" + ((window.innerWidth - POPUP_WIDTH) / 2) + "px";
                 
                 this._scrimContainer = document.getElementById(scrimMountId);
                 this._scrimContainer.style.visibility = "hidden";
@@ -106,6 +112,11 @@ if(this.Graphite == null)
                     this.close();
                 }
             };
+            
+            window.onresize = function()
+            {
+                this._container.style.left = "" + ((window.innerWidth - POPUP_WIDTH) / 2) + "px";
+            }.bind(this);
             
             this.close = function()
             {

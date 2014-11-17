@@ -92,7 +92,7 @@
                         scriptLink.onload = dependencyLoaded.bind(this, scriptObj.type);
                         scriptLink.async = true;
                         scriptLink.src = scriptObj.res;
-                        headTag.appendChild(scriptLink);
+                        var res = headTag.appendChild(scriptLink);
                     }
                     else
                     {
@@ -160,7 +160,8 @@
         {
             google: { families: ['Permanent Marker'] },
             fontactive: function () { dependencyLoaded(DEP_FONTS); },
-            fontinactive: function () { dependencyLoaded(DEP_FONTS); }
+            fontinactive: function () { dependencyLoaded(DEP_FONTS); },
+            timeout: 3500
         };
         
         // ------------------------------------------     SCRIPT DEPENDENCIES    ------------------------------------------------------
@@ -206,7 +207,13 @@
     <div id="messager" class="MessagerContainer"></div>
     
     <a href="http://www.local-binary.com">
-        <div class="home"></div>
+        <div class="home">
+            <p class="local-binary-text-medium" style="top: -18px;  left: 3px;">7</p>
+            <p class="local-binary-text-small"  style="top: -67px;  left: 88px; margin-right: 80px;">1<br/>2<br/>3<br/>1</p>
+            <p class="local-binary-text-large"  style="top: -153px; left: 3px;">Lb</p>
+            <p class="local-binary-text-small"  style="top: -222px; left: 6px;">Local Binary</p>
+            <p class="local-binary-text-small"  style="top: -234px; left: 6px;">7.22506</p>
+        </div>
     </a>
     
     <div id="menu"></div>

@@ -109,7 +109,7 @@ if(this.Graphite == null)
                             this.getLayer().draw();
                         });
                         
-                        deleteImage.on('click', function(event)
+                        deleteImage.on('click tap', function(event)
                         {
                             properties.deleteProps.action(node);
                         });
@@ -160,7 +160,7 @@ if(this.Graphite == null)
                             this.getLayer().draw();
                         });
                         
-                        contentImage.on('click', function(event)
+                        contentImage.on('click tap', function(event)
                         {
                             properties.contentProps.action(node);
                         });
@@ -211,7 +211,7 @@ if(this.Graphite == null)
                             this.getLayer().draw();
                         });
                         
-                        settingsImage.on('click', function(event)
+                        settingsImage.on('click tap', function(event)
                         {
                             var settings = new Array();
                             settings[0] = [{id:'nameInput', text:'Name:', type:'text', value:node.text()}]; 
@@ -276,7 +276,7 @@ if(this.Graphite == null)
                     var childList = this._overlay.getChildren();
                     for(var i = 0; i < childList.length; i++)
                     {
-                        childList[i].off("mouseenter mouseleave click");
+                        childList[i].off("mouseenter mouseleave click tap");
                     }
                     
                     // to be more scalable, let's not keep these around
@@ -295,7 +295,7 @@ if(this.Graphite == null)
                 var childList = this._overlay.getChildren();
                 for(var i = 0; i < childList.length; i++)
                 {
-                    childList[i].off("mouseenter mouseleave click");
+                    childList[i].off("mouseenter mouseleave click tap");
                 }
 
                 this._background.destroy();

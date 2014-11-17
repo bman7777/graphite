@@ -25,18 +25,22 @@ if(this.Graphite == null)
                     this._isAuthorized = false;
                     this._authToken = undefined;
                     
-                    var authReq = new XMLHttpRequest();
-                    authReq.open("GET", "api/authorize", false);
-                    authReq.onload = function()
+                    // we can't authorize if we are running cross domain
+                    if(document.URL.indexOf("file:///") != 0)
                     {
-                        var googleAuth = JSON.parse(authReq.responseText);
-                        googleAuth.scope = 'https://www.googleapis.com/auth/drive';
-                        googleAuth.immediate = (immediate == true);
-                        
-                        gapi.auth.authorize(googleAuth, 
-                            this._handleAuthorizationResult.bind(this, callback));
-                    }.bind(this);
-                    authReq.send(null);
+                        var authReq = new XMLHttpRequest();
+                        authReq.open("GET", "api/authorize", false);
+                        authReq.onload = function()
+                        {
+                            var googleAuth = JSON.parse(authReq.responseText);
+                            googleAuth.scope = 'https://www.googleapis.com/auth/drive';
+                            googleAuth.immediate = (immediate == true);
+                            
+                            gapi.auth.authorize(googleAuth, 
+                                this._handleAuthorizationResult.bind(this, callback));
+                        }.bind(this);
+                        authReq.send(null);
+                    }
                 }
                 else
                 {
@@ -193,9 +197,6 @@ if(this.Graphite == null)
                     {
                         thumbnail = thumbnail.split("base64,")[1].replace(
                             /\+/g, '-').replace(/\//g, '_');
-                                
-                                
-                                ///[/]/g, "_").replace(/[+]/g, "-").replace(/[=]/g, "*");
                         
                         var doc = this._builder.toXML();
                         const boundary = "gapi.client.request-Multipart-Boundary";

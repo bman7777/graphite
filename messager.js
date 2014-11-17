@@ -51,7 +51,7 @@ if(this.Graphite == null)
             
             this._changeFileName = function()
             {
-                this._builder.processFile(Graphite.MenuConfig.FILE_NEW);
+                this._builder.processFile({type: Graphite.MenuConfig.FILE_NEW});
             };
             
             this.refreshGoBack = function(show, callback)
