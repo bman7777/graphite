@@ -164,13 +164,13 @@ if(this.Graphite == null)
                 var optionProps = { deleteProps:{}, contentProps:{}, settingsProps:{}, pickLink:{}};
                 optionProps.deleteProps.action =  function(node) { builder.removeNode(node); };
                 optionProps.settingsProps.action =  function(title, settings, buttons) { builder.openPopup(title, settings, buttons); };
-                optionProps.contentProps.action =  function(node) { builder.openContent(node); };
+                optionProps.contentProps.action = this._selectContent.bind(this);
                 optionProps.pickLink.action = function(callback) { builder.processFile({type: Graphite.MenuConfig.FILE_LOAD, callback: callback}); };
                 
                 switch(type)
                 {
                     case Graphite.MenuConfig.SHAPE_TRIANGLE:
-                        optionProps.bgImageSrc = "img/web/lineHalo.png";
+                        optionProps.bgType = "straight";
                         optionProps.contentProps.x = 58;
                         optionProps.contentProps.y = -39;
                         optionProps.deleteProps.x = 27;
@@ -181,7 +181,7 @@ if(this.Graphite == null)
                         break;
                         
                     case Graphite.MenuConfig.SHAPE_SQUARE:
-                        optionProps.bgImageSrc = "img/web/lineHalo.png";
+                        optionProps.bgType = "straight";
                         optionProps.contentProps.x = 72;
                         optionProps.contentProps.y = -10;
                         optionProps.deleteProps.x = 71;
@@ -192,7 +192,7 @@ if(this.Graphite == null)
                         break;
                     
                     default:
-                        optionProps.bgImageSrc = "img/web/roundHalo.png";
+                        optionProps.bgType = "curve";
                         optionProps.contentProps.x = 94;
                         optionProps.contentProps.y = -38;
                         optionProps.deleteProps.x = 52;
@@ -204,6 +204,48 @@ if(this.Graphite == null)
                 }
 
                 return new Graphite.NodeOptions(optionProps);
+            };
+            
+            this._selectContent = function(node)
+            {
+                if(node.link() == "")
+                {
+                    var settings = new Array();
+                    settings[0] = [{id:'existingFileInput', text:'File:', type:'button', value:"Choose File", 
+                        onClickCallback: function(event)
+                        {
+                            var target = event.target || event.srcElement;
+                            
+                            builder.processFile({type: Graphite.MenuConfig.FILE_LOAD, callback: function(target, data)
+                            {
+                                if (data.action == google.picker.Action.PICKED)
+                                {
+                                    var doc = data.docs[0];
+                                    node.linkName(doc.name);
+                                    node.link(doc.id);
+                                    
+                                    // update the button that showed the file link
+                                    target.value = doc.name;
+                                }
+                            }.bind(this, target)});
+                            
+                            // don't close the popup while we are picking a link
+                            return false;
+                        }
+                    }];
+                    
+                    var buttons = 
+                    [
+                       {id:'saveButton', text:'Save', desc:'Save Changes'}, 
+                       {id:'cancelButton', text:'Cancel', desc:"Don't Save Changes"}
+                    ];
+                    
+                    builder.openPopup("Settings", settings, buttons);
+                }
+                else
+                {
+                    builder.openContent(node);
+                }
             };
             
             this.destroyOptions = function(options)

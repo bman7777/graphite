@@ -133,7 +133,7 @@ if(this.Graphite == null)
             this.onHighlightButton = function(event)
             {
                 var target = event.target || event.srcElement;
-                target.style.textShadow = "0px 1px 2px #333333";
+                target.style.textShadow = "0px 1px 1px #333333, 0px -1px 1px #333333, -1px 0px 1px #333333, 1px 0px 1px #333333";
                 target.style.backgroundColor = "#cceeee";
                 target.style.borderColor = "#9d9e9e";
                 target.style.cursor = "pointer";
